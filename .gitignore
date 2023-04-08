@@ -6,6 +6,6 @@ out
 public
 current-config.json
 __pycache__
-Token.json
+token.json
 yars_secrets.py
-ExtractedPosts
+extracted-posts

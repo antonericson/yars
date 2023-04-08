@@ -3,22 +3,20 @@ import os
 import json
 import random
 from datetime import datetime
-from yars_secrets import *
-from token_handler import *
+import token_handler
 
-LOCAL_REGISTRY_FILE = './usedPosts.json'
+LOCAL_REGISTRY_FILE = './used_posts.json'
 
 #Ca 60 sekunder för short. blir under 900 tecken.
+def get_post():
 
-def getPost():
+    if  not os.path.isdir('./extracted-posts'):
+        os.mkdir('extracted-posts')
 
-    if  not os.path.isdir('./ExtractedPosts'):
-        os.mkdir('ExtractedPosts')
-
-    postId = getLocalRedditPostId()
+    postId = get_local_reddit_post_id()
 
     if postId:
-        fileName = './ExtractedPosts/' + postId + '.json'
+        fileName = './extracted-posts/' + postId + '.json'
         with open(fileName) as json_file:
             postData = json.load(json_file)
     else:
@@ -26,62 +24,59 @@ def getPost():
     return postData
         
 
-def getLocalAvailablePosts():
-    availablePosts = [os.path.splitext(i)[0] for i in os.listdir('./ExtractedPosts/')]
-    random.shuffle(availablePosts)
+def get_local_available_posts():
+    available_posts = [os.path.splitext(i)[0] for i in os.listdir('./extracted-posts/')]
+    random.shuffle(available_posts)
 
-    return availablePosts
+    return available_posts
 
-def getLocalRedditPostId():
+def get_local_reddit_post_id():
 
     if not os.path.isfile(LOCAL_REGISTRY_FILE):
-        usedFilesDict = []
+        used_files_dict = []
     else: 
         with open(LOCAL_REGISTRY_FILE) as used_posts_file:
-            usedFilesDict = json.load(used_posts_file)
+            used_files_dict = json.load(used_posts_file)
         
-    availablePosts = getLocalAvailablePosts()
-    if not availablePosts:
-        if getRedditPostsFromRemote():
-            availablePosts = getLocalAvailablePosts()
+    available_posts = get_local_available_posts()
+    if not available_posts:
+        if get_reddit_posts_from_remote():
+            available_posts = get_local_available_posts()
         else:
             return None
 
-    if not usedFilesDict:
+    if not used_files_dict:
         #Empty
-        usedFilesDict.append({"PostId": availablePosts[0],
-                              "Extracted": datetime.now().strftime("%Y%m%dT%H%M%S")})
+        used_files_dict.append({"post_id": available_posts[0],
+                              "extracted": datetime.now().strftime("%Y%m%dT%H%M%S")})
         with open(LOCAL_REGISTRY_FILE, "w") as used_posts_file:
-            used_posts_file.write(json.dumps(usedFilesDict, indent=4))
-        return availablePosts[0]
+            used_posts_file.write(json.dumps(used_files_dict, indent=4))
+        return available_posts[0]
     else:
-        for post in availablePosts:
+        for post in available_posts:
             post_has_been_used = False
-            for usedPosts in usedFilesDict:
-                if post == usedPosts['PostId']:
+            for used_posts in used_files_dict:
+                if post == used_posts['post_id']:
                     post_has_been_used = True
                     break
             
             if not post_has_been_used:
-                usedFilesDict.append({"PostId": post,
-                        "Extracted": datetime.now().strftime("%Y%m%dT%H%M%S")})
+                used_files_dict.append({"post_id": post,
+                        "extracted": datetime.now().strftime("%Y%m%dT%H%M%S")})
                 with open(LOCAL_REGISTRY_FILE, "w") as used_posts_file:
-                    used_posts_file.write(json.dumps(usedFilesDict, indent=4))
+                    used_posts_file.write(json.dumps(used_files_dict, indent=4))
                 return post
         
         #If scripts comes here and there's no post available to return then grab more posts
         
-        if getRedditPostsFromRemote():
-            return getLocalRedditPostId()
+        if get_reddit_posts_from_remote():
+            return get_local_reddit_post_id()
         else:
             return None
     
-    
-
-
-def getRedditPostsFromRemote():
+def get_reddit_posts_from_remote():
     has_downloaded_post = False
-    SubReddits = [  'r/todayilearned',
+    sub_reddits = [  'r/todayilearned',
                     'r/TrueOffMyChest',
                     'r/IWantToLearn',
                     'r/Futurology',
@@ -89,21 +84,19 @@ def getRedditPostsFromRemote():
                     'r/unpopularopinion',
                     'r/LifeProTips']
     
-    Token = getToken()
+    token = token_handler.get_token()
     # setup our header info, which gives reddit a brief description of our app
     headers = {'User-Agent': 'TextToSpeechVideos/0.0.1'}
     # add authorization to our headers dictionary
-    headers = {**headers, **{'Authorization': f"bearer {Token['Token']}"}}
+    headers = {**headers, **{'Authorization': f"bearer {token['token']}"}}
 
-    for sub in SubReddits:
+    for sub in sub_reddits:
+        top_url = 'https://oauth.reddit.com/' + sub + '/top/?t=month'
 
-        TopUrl = 'https://oauth.reddit.com/' + sub + '/top/?t=month'
+        res = requests.get(top_url, headers=headers)
+        all_posts = res.json()['data']['children']
 
-        res = requests.get(TopUrl,
-                        headers=headers)
-        allPosts = res.json()['data']['children']
-
-        for post in allPosts:
+        for post in all_posts:
             if "url_overridden_by_dest" in post['data']: #Post has url
                 continue
             if post['data']['is_video']:
@@ -112,9 +105,9 @@ def getRedditPostsFromRemote():
                 continue
 
             json_post = json.dumps(post['data'], indent=4)
-            fileName = './ExtractedPosts/' + post['data']['name'] + '.json'
-            if not os.path.isfile(fileName):
-                with open(fileName, 'w') as json_file:
+            file_name = './extracted-posts/' + post['data']['name'] + '.json'
+            if not os.path.isfile(file_name):
+                with open(file_name, 'w') as json_file:
                     has_downloaded_post = True
                     json_file.write(json_post)
 
