@@ -5,8 +5,10 @@ import { Attribution } from './RedditStory/Attribution';
 export const RedditStory: React.FC<{
 	backgroundVideoName: string,
 	sentences: Array<string>,
-	videoLengths: Array<number>
-}> = ({ backgroundVideoName, sentences, videoLengths }) => {
+	videoLengths: Array<number>,
+	author: string,
+	subreddit: string
+}> = ({ backgroundVideoName, sentences, videoLengths, author, subreddit }) => {
 	const frame = useCurrentFrame();
 	const videoConfig = useVideoConfig();
 
@@ -50,14 +52,16 @@ export const RedditStory: React.FC<{
 		<div style={{flex: 1}}>
 			<OffthreadVideo
 				muted
-				src={staticFile('video/1.mkv')}
+				src={staticFile(`video/${backgroundVideoName}`)}
 				style={{
 					objectFit: 'cover',
 					width: '100%',
 					height: '100%'
 				}} />
-			{sequences()}
-			<Attribution author='test author' subreddit='shitposts'/>
+				<div style={{ opacity }}>
+					{sequences()}
+				</div>
+			<Attribution author={author} subreddit={subreddit}/>
 		</div>
 	);
 };

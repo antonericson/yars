@@ -15,7 +15,9 @@ export const RemotionRoot: React.FC = () => {
 				defaultProps={{
 					backgroundVideoName: props.backgroundVideoName,
 					sentences: props.sentences,
-					videoLengths: props.videoLengths
+					videoLengths: props.videoLengths,
+					author: props.author,
+					subreddit: props.subreddit
 				}}
 			/>
 		</>

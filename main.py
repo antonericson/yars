@@ -42,7 +42,10 @@ def main():
     sentences = []
     if body:
         sentences = get_sentences_from_story(body)
-    sentences.insert(0, title)
+        sentences.insert(0, title)
+    else:
+        sentences.append(subreddit)
+        sentences.append(title)
 
     video_lengths = tts.generate_tts_for_sentences(tts_instance, sentences)
 
