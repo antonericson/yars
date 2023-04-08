@@ -4,7 +4,7 @@ import json
 import reddit_integration
 from TTS.api import TTS
 
-def getSentencesFromStory(full_story):
+def get_sentences_from_story(full_story):
     sentences = []
     for sentence in full_story.split(". "):
         sentence.strip()
@@ -18,12 +18,12 @@ def getSentencesFromStory(full_story):
                 sentences.append(word)
     return sentences
 
-def create_react_config(backgroundVideoName, sentences, videoLengths):
+def create_react_config(background_video_name, sentences, video_lengths):
   config = {
-    "backgroundVideoName": backgroundVideoName,
+    "backgroundVideoName": background_video_name,
     "sentences": sentences,
-    "videoLengths": videoLengths,
-    "totalLength": sum(videoLengths)
+    "videoLengths": video_lengths,
+    "totalLength": sum(video_lengths)
   }
   json_config = json.dumps(config)
   with open(f'current-config.json', 'w') as config_file:
@@ -38,8 +38,8 @@ def main():
 
     tts_instance = TTS(model_name="tts_models/en/vctk/vits")
     for story in all_stories:
-        sentences = getSentencesFromStory(story)
-        video_lengths = tts.generateTTSForSentences(tts_instance, sentences)
+        sentences = get_sentences_from_story(story)
+        video_lengths = tts.generate_tts_for_sentences(tts_instance, sentences)
 
     create_react_config("gameplay_video.mp4", sentences, video_lengths)
 

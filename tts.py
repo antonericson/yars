@@ -1,7 +1,7 @@
 import contextlib
 import wave
 
-def generateTTSForSentences(tts, sentences):
+def generate_tts_for_sentences(tts, sentences):
   video_lengths = []
   for i, sentence in enumerate(sentences):
     path_for_react = f'audio/{i}.wav'
