@@ -1,6 +1,7 @@
 import tts
 import subprocess
 import json
+import reddit_integration
 from TTS.api import TTS
 
 def getSentencesFromStory(full_story):
@@ -28,9 +29,11 @@ def create_react_config(backgroundVideoName, sentences, videoLengths):
 
 def main():
 
+    post = reddit_integration.getPost()
+
     #test_story = "So my parents bought a house almost 3 years ago for me and my wife and kids to rent from them. They originally told us it would take a few months to a year to get ready so we agreed, they bought the house then asked us if we wanted to rent. We'll its been almost 3 years now and they still refuse to let my wifes side of the family help and now, me and my wife have the option to buy a home and we decided that that's what we wanted instead of renting. When we informed then of our decision they were not happy about it. It's been a month and they have still not responded to any of our messages or calls. We've tried reaching out to them and inviting them to our kids games and graduation but they have yet to even read the messages but we see them messaging in the family group chat about other family members events. So am I the asshole for deciding to buy a house instead of renting the one they bought?"
-    test_story = "I'm a pleaser. Mainly because I want to help out and want people to like me. I'm also a person who is overloaded with ideas, gets very enthusiastic over these and have the urge to share. So when someone comes to me for help or advice, whether personal or work related, I come up with solutions that usually work out pretty well when executed.\n\nProblem is that I always have the feeling that I don't get enough credit for it. I feel like I really helped someone about but don't feel loved because of it. I often feel like people use me and take all the credit for themselves. \n\nHow do I stop pleasing?"
-    all_stories = [test_story]
+    #test_story = "I'm a pleaser. Mainly because I want to help out and want people to like me. I'm also a person who is overloaded with ideas, gets very enthusiastic over these and have the urge to share. So when someone comes to me for help or advice, whether personal or work related, I come up with solutions that usually work out pretty well when executed.\n\nProblem is that I always have the feeling that I don't get enough credit for it. I feel like I really helped someone about but don't feel loved because of it. I often feel like people use me and take all the credit for themselves. \n\nHow do I stop pleasing?"
+    all_stories = [post['selftext']]
 
     tts_instance = TTS(model_name="tts_models/en/vctk/vits")
     for story in all_stories:

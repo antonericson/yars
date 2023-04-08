@@ -6,6 +6,6 @@ out
 public
 current-config.json
 __pycache__
-redditIntegration/Token.json
-redditIntegration/YARSSecrets.py
-redditIntegration/ExtractedPosts/*
+Token.json
+yars_secrets.py
+ExtractedPosts

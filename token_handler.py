@@ -2,7 +2,7 @@ import requests
 import json
 import os
 from datetime import datetime, timedelta
-from YARSSecrets import *
+from yars_secrets import *
 
 
 def getToken():

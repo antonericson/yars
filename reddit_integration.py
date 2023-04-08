@@ -3,13 +3,12 @@ import os
 import json
 import random
 from datetime import datetime
-from YARSSecrets import *
-from RefreshToken import *
+from yars_secrets import *
+from token_handler import *
 
 LOCAL_REGISTRY_FILE = './usedPosts.json'
 
 #Ca 60 sekunder för short. blir under 900 tecken.
-
 
 def getPost():
 
