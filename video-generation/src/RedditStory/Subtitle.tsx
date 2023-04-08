@@ -22,7 +22,7 @@ export const Subtitle: React.FC<{
 				style={{
 					fontFamily: 'SF Pro Text, Helvetica, Arial',
 					fontWeight: 'bold',
-					fontSize: 60,
+					fontSize: 70,
 					textAlign: 'center',
 					position: 'absolute',
 					bottom: '50%',

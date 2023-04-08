@@ -1,7 +1,6 @@
 import contextlib
 import wave
 
-
 def generateTTSForSentences(tts, sentences):
   video_lengths = []
   for i, sentence in enumerate(sentences):

@@ -1,5 +1,6 @@
 import { interpolate, Sequence, staticFile, useCurrentFrame, useVideoConfig, OffthreadVideo } from 'remotion';
 import { Subtitle } from './RedditStory/Subtitle';
+import { Attribution } from './RedditStory/Attribution';
 
 export const RedditStory: React.FC<{
 	backgroundVideoName: string,
@@ -26,14 +27,14 @@ export const RedditStory: React.FC<{
 		let from = transitionStart
 		sentences.forEach((sentence, index) => {
 			if (index < sentences.length - 1) {
-				seq = <Sequence from={from} durationInFrames={videoLengths[index] * 30 + 5} style={{gridArea: '1 / 1 / 2 / 2'}}>
+				seq = <Sequence from={from} durationInFrames={videoLengths[index] * 30 + 5}>
 					<Subtitle
 						titleText={sentence}
 						audioFile={`audio/${index}.wav`}
 						titleColor={"black"} />
 				</Sequence>
 			} else {
-				seq = <Sequence from={from} style={{gridArea: '1 / 1 / 2 / 2'}}>
+				seq = <Sequence from={from}>
 					<Subtitle
 						titleText={sentence}
 						audioFile={`audio/${index}.wav`}
@@ -55,9 +56,8 @@ export const RedditStory: React.FC<{
 					width: '100%',
 					height: '100%'
 				}} />
-			<div style={{ opacity, gridColumn: 1, gridRow: 1 }}>
-				{sequences()}
-			</div>
+			{sequences()}
+			<Attribution author='test author' subreddit='shitposts'/>
 		</div>
 	);
 };
