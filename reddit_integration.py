@@ -1,16 +1,16 @@
 import requests
 import os
 import json
-import random
+from random import shuffle
 from datetime import datetime
-import token_handler
+import utils
 
 LOCAL_REGISTRY_FILE = './used_posts.json'
 
 #Ca 60 sekunder för short. blir under 900 tecken.
 def get_post():
 
-    if  not os.path.isdir('./extracted-posts'):
+    if not os.path.isdir('./extracted-posts'):
         os.mkdir('extracted-posts')
 
     postId = get_local_reddit_post_id()
@@ -26,7 +26,7 @@ def get_post():
 
 def get_local_available_posts():
     available_posts = [os.path.splitext(i)[0] for i in os.listdir('./extracted-posts/')]
-    random.shuffle(available_posts)
+    shuffle(available_posts)
 
     return available_posts
 
@@ -84,7 +84,7 @@ def get_reddit_posts_from_remote():
                     'r/unpopularopinion',
                     'r/LifeProTips']
     
-    token = token_handler.get_token()
+    token = utils.get_token()
     # setup our header info, which gives reddit a brief description of our app
     headers = {'User-Agent': 'TextToSpeechVideos/0.0.1'}
     # add authorization to our headers dictionary

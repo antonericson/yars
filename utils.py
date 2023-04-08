@@ -2,6 +2,7 @@ import requests
 import json
 import os
 from datetime import datetime, timedelta
+from random import randrange
 from yars_secrets import *
 
 def get_token():
@@ -58,3 +59,10 @@ def get_token():
 
         else:
             return token_data
+
+def get_background_video_name():
+    if not os.path.isdir('./video-generation/public/video'):
+        os.mkdir('./video-generation/public/video')
+    
+    all_videos = os.listdir('./video-generation/public/video')
+    return all_videos[randrange(len(all_videos))]
