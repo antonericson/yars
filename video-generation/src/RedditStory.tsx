@@ -4,11 +4,12 @@ import { Attribution } from './RedditStory/Attribution';
 
 export const RedditStory: React.FC<{
 	backgroundVideoName: string,
+	startFrame: number,
 	sentences: Array<string>,
 	videoLengths: Array<number>,
 	author: string,
 	subreddit: string
-}> = ({ backgroundVideoName, sentences, videoLengths, author, subreddit }) => {
+}> = ({ backgroundVideoName, startFrame, sentences, videoLengths, author, subreddit }) => {
 	const frame = useCurrentFrame();
 	const videoConfig = useVideoConfig();
 
@@ -29,14 +30,14 @@ export const RedditStory: React.FC<{
 		let from = transitionStart
 		sentences.forEach((sentence, index) => {
 			if (index < sentences.length - 1) {
-				seq = <Sequence from={from} durationInFrames={videoLengths[index] * 30 + 5}>
+				seq = <Sequence from={from} key={index} durationInFrames={videoLengths[index] * 30 + 5}>
 					<Subtitle
 						titleText={sentence}
 						audioFile={`audio/${index}.wav`}
 						titleColor={"black"} />
 				</Sequence>
 			} else {
-				seq = <Sequence from={from}>
+				seq = <Sequence from={from} key={index}>
 					<Subtitle
 						titleText={sentence}
 						audioFile={`audio/${index}.wav`}

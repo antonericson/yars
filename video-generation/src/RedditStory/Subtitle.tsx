@@ -34,7 +34,7 @@ export const Subtitle: React.FC<{
 				{text.map((t, i) => {
 					return (
 						<span
-							key={t}
+							key={t+'-'+i}
 							style={{
 								color: titleColor,
 								marginLeft: 20,

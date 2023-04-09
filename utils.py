@@ -3,6 +3,7 @@ import json
 import os, shutil
 import logging
 import time
+import ffmpeg
 from datetime import datetime, timedelta
 from random import randrange
 from yars_secrets import *
@@ -65,10 +66,35 @@ def get_token():
             return token_data
 
 def get_background_video_name():
+    log = get_logger()
+
     if not os.path.isdir('./video-generation/public/video'):
+        log.info("No public/video folder, creating...")
         os.mkdir('./video-generation/public/video')
     
+    if not os.path.isdir('./background-videos'):
+        log.info("No background-videos folder, creating...")
+        os.mkdir('./background-videos')
+    
+    if not os.path.isdir('./background-videos/archive'):
+        log.info("No archive folder, creating...")
+        os.mkdir('./background-videos/archive')
+
     all_videos = os.listdir('./video-generation/public/video')
+    if len(all_videos) == 0:
+        log.info('No pre-cut videos available. Looking for source videos.')
+        source_videos = os.listdir('./background-videos')
+        if len(source_videos) <= 1:
+            log.info('No source videos found in background-videos, exiting')
+            raise Exception()
+        video_to_slice = source_videos[0]
+        [name, filetype] = video_to_slice.split('.')
+        log.info(f'Slicing {video_to_slice}...')
+        ffmpeg.input(f'background-videos/{video_to_slice}').output(f'./video-generation/public/video/{name}%03d.webm', c="copy", map="0", segment_time='00:01:00', f="segment", reset_timestamps=1).run()
+        all_videos = os.listdir('./video-generation/public/video')
+        log.info(f'Moving {video_to_slice} to archive...')
+        os.rename(f'./background-videos/{video_to_slice}', f'./background-videos/archive/{video_to_slice}')
+    
     return all_videos[randrange(len(all_videos))]
 
 def remove_tts_audio_files():
@@ -82,6 +108,9 @@ def remove_tts_audio_files():
                 shutil.rmtree(file_path)
         except Exception as e:
             print('Failed to delete %s. Reason: %s' % (file_path, e))
+
+def remove_file(file_path):
+    os.remove(file_path)
 
 def get_logger():
     global _logger

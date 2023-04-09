@@ -2,7 +2,7 @@ import tts
 import subprocess
 import json
 import reddit_integration
-from utils import get_background_video_name, remove_tts_audio_files
+from utils import get_background_video_name, remove_tts_audio_files, get_logger, remove_file
 import cv2
 from TTS.api import TTS
 
@@ -34,6 +34,7 @@ def create_react_config(background_video_name, background_video_frame_count, sen
     config_file.write(json_config)
 
 def main():
+    log = get_logger()
     post = reddit_integration.get_post()
     title = post['title']
     body = post['selftext']
@@ -52,22 +53,28 @@ def main():
     video_lengths = tts.generate_tts_for_sentences(tts_instance, sentences)
 
     if(sum(video_lengths) > 58):
-        print("Generated video would become longer than 60 seconds")
+        print("Generated video would become longer than 60 secondss")
         return
     
-    background_video_name = get_background_video_name()
+    try:
+        background_video_name = get_background_video_name()
+    except Exception:
+        log.error("Failed to get background video")
+        remove_tts_audio_files()
+        return
+
     background_video_path = f'./video-generation/public/video/{background_video_name}'
 
     cap = cv2.VideoCapture(background_video_path)
     background_video_frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     cap.release()
 
-
     create_react_config(background_video_name, background_video_frame_count, sentences, video_lengths, author, subreddit)
 
     generate_video_command = 'cd video-generation; npx remotion render RedditStory ../out/video.mp4 --props=../current-config.json'
     subprocess.run(generate_video_command, shell=True)
 
+    remove_file(background_video_path)
     remove_tts_audio_files()
 
 if __name__ == "__main__":
