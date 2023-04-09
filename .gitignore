@@ -9,3 +9,4 @@ __pycache__
 token.json
 yars_secrets.py
 extracted-posts
+logs

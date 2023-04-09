@@ -1,9 +1,13 @@
 import requests
 import json
-import os
+import os, shutil
+import logging
+import time
 from datetime import datetime, timedelta
 from random import randrange
 from yars_secrets import *
+
+_logger = None
 
 def get_token():
     if not os.path.isfile("token.json"):
@@ -66,3 +70,46 @@ def get_background_video_name():
     
     all_videos = os.listdir('./video-generation/public/video')
     return all_videos[randrange(len(all_videos))]
+
+def remove_tts_audio_files():
+    folder = './video-generation/public/audio'
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
+
+def get_logger():
+    global _logger
+
+    if _logger is not None:
+        return _logger
+    
+    # Create a logger object
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+
+    log_file_name = time.strftime('log_%Y-%m-%d_%H-%M-%S.log')
+
+    # Create a file handler that writes log messages to a file
+    file_handler = logging.FileHandler(f'./logs/{log_file_name}')
+    file_handler.setLevel(logging.DEBUG)
+
+    # Create a console handler that writes log messages to the console
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+
+    # Define the log message format
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+
+    # Add the file and console handlers to the logger
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
+    return logger
