@@ -4,6 +4,7 @@ import json
 import reddit_integration
 from utils import get_background_video_name, remove_tts_audio_files, get_logger, remove_file
 import cv2
+import os
 from TTS.api import TTS
 
 def get_sentences_from_story(full_story):
@@ -40,6 +41,7 @@ def main():
     body = post['selftext']
     author = post['author']
     subreddit = post['subreddit']
+    post_id = post['name']
 
     tts_instance = TTS(model_name="tts_models/en/vctk/vits")
     sentences = []
@@ -71,8 +73,11 @@ def main():
     cap.release()
 
     create_react_config(background_video_name, background_video_frame_count, sentences, video_lengths, author, subreddit)
+    if not os.path.isdir(f'./out/{subreddit}_{post_id}'):
+        log.info(f"Creating video folder ./out/{subreddit}_{post_id}")
+        os.mkdir(f'./out/{subreddit}_{post_id}')
 
-    generate_video_command = 'cd video-generation; npx remotion render RedditStory ../out/video.mp4 --props=../current-config.json'
+    generate_video_command = f'cd video-generation; npx remotion render RedditStory ../out/{subreddit}_{post_id}/AmazingRedditStory.mp4 --props=../current-config.json'
     subprocess.run(generate_video_command, shell=True)
 
     remove_file(background_video_path)

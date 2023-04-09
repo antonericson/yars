@@ -30,7 +30,7 @@ export const RedditStory: React.FC<{
 		let from = transitionStart
 		sentences.forEach((sentence, index) => {
 			if (index < sentences.length - 1) {
-				seq = <Sequence from={from} key={index} durationInFrames={videoLengths[index] * 30 + 5}>
+				seq = <Sequence from={from} key={index} durationInFrames={videoLengths[index] * 30}>
 					<Subtitle
 						titleText={sentence}
 						audioFile={`audio/${index}.wav`}
