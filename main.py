@@ -47,8 +47,8 @@ def main():
         sentences = get_sentences_from_story(body)
         sentences.insert(0, title)
     else:
-        sentences.append(subreddit)
         sentences.append(title)
+    sentences.insert(0, subreddit)
 
     video_lengths = tts.generate_tts_for_sentences(tts_instance, sentences)
 
@@ -58,8 +58,9 @@ def main():
     
     try:
         background_video_name = get_background_video_name()
-    except Exception:
+    except Exception as e:
         log.error("Failed to get background video")
+        log.error(f"Exception {e}")
         remove_tts_audio_files()
         return
 

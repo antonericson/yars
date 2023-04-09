@@ -83,14 +83,16 @@ def get_background_video_name():
     all_videos = os.listdir('./video-generation/public/video')
     if len(all_videos) == 0:
         log.info('No pre-cut videos available. Looking for source videos.')
-        source_videos = os.listdir('./background-videos')
-        if len(source_videos) <= 1:
+
+        source_videos = [f for f in os.listdir('./background-videos') if os.path.isfile(f'./background-videos/{f}')]
+
+        if len(source_videos) == 0:
             log.info('No source videos found in background-videos, exiting')
             raise Exception()
         video_to_slice = source_videos[0]
         [name, filetype] = video_to_slice.split('.')
         log.info(f'Slicing {video_to_slice}...')
-        ffmpeg.input(f'background-videos/{video_to_slice}').output(f'./video-generation/public/video/{name}%03d.webm', c="copy", map="0", segment_time='00:01:00', f="segment", reset_timestamps=1).run()
+        ffmpeg.input(f'background-videos/{video_to_slice}').output(f'./video-generation/public/video/{name}%03d.mp4', c="copy", map="0", segment_time='00:01:00', f="segment", reset_timestamps=1).run()
         all_videos = os.listdir('./video-generation/public/video')
         log.info(f'Moving {video_to_slice} to archive...')
         os.rename(f'./background-videos/{video_to_slice}', f'./background-videos/archive/{video_to_slice}')
