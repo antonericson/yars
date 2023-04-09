@@ -96,7 +96,7 @@ def get_reddit_posts_from_remote():
         all_posts = res.json()['data']['children']
 
         for post in all_posts:
-            if "url_overridden_by_dest" in post['data']: #Post has url
+            if "url_overridden_by_dest" in post['data'] and not post['subreddit'] == 'todayilearned': #Post has url (for all but TIL)
                 continue
             if post['data']['is_video']:
                 continue
