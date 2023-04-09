@@ -8,12 +8,13 @@ import utils
 LOCAL_REGISTRY_FILE = './used_posts.json'
 
 #Ca 60 sekunder för short. blir under 900 tecken.
-def get_post():
+def get_post(postId = None):
 
     if not os.path.isdir('./extracted-posts'):
         os.mkdir('extracted-posts')
 
-    postId = get_local_reddit_post_id()
+    if not postId:
+        postId = get_local_reddit_post_id()
 
     if postId:
         fileName = './extracted-posts/' + postId + '.json'
@@ -21,6 +22,8 @@ def get_post():
             postData = json.load(json_file)
     else:
         postData = None
+
+
     return postData
         
 
@@ -96,7 +99,7 @@ def get_reddit_posts_from_remote():
         all_posts = res.json()['data']['children']
 
         for post in all_posts:
-            if "url_overridden_by_dest" in post['data'] and not post['subreddit'] == 'todayilearned': #Post has url (for all but TIL)
+            if "url_overridden_by_dest" in post['data'] and not post['data']['subreddit'] == 'todayilearned': #Post has url (for all but TIL)
                 continue
             if post['data']['is_video']:
                 continue

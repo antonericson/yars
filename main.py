@@ -17,7 +17,8 @@ def get_sentences_from_story(full_story):
                 letters = word.split(" ")
                 sentences.append(' '.join(letters[:len(letters)//2]))
                 sentences.append(' '.join(letters[len(letters)//2:]))
-
+            else:
+                sentences.append(word)
     return sentences
 
 def create_react_config(background_video_name, background_video_frame_count, sentences, video_lengths, author, subreddit):
@@ -42,15 +43,14 @@ def main():
     author = post['author']
     subreddit = post['subreddit']
     post_id = post['name']
-    link_to_post = post['url']
+    link_to_post = f'https://www.reddit.com{post["permalink"]}'
 
     tts_instance = TTS(model_name="tts_models/en/vctk/vits")
     sentences = []
     if body:
-        sentences = get_sentences_from_story(body)
-        sentences.insert(0, title)
+        sentences = get_sentences_from_story(title) + get_sentences_from_story(body)
     else:
-        sentences.append(title)
+        sentences = get_sentences_from_story(title)
     sentences.insert(0, subreddit)
 
     video_lengths = tts.generate_tts_for_sentences(tts_instance, sentences)
