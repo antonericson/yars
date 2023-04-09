@@ -78,11 +78,10 @@ def get_reddit_posts_from_remote():
     has_downloaded_post = False
     sub_reddits = [  'r/todayilearned',
                     'r/TrueOffMyChest',
-                    'r/IWantToLearn',
-                    'r/Futurology',
                     'r/Showerthoughts',
                     'r/unpopularopinion',
-                    'r/LifeProTips']
+                    'r/LifeProTips',
+                    'r/AmItheAsshole']
     
     token = utils.get_token()
     # setup our header info, which gives reddit a brief description of our app
