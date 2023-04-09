@@ -4,12 +4,11 @@ import { Attribution } from './RedditStory/Attribution';
 
 export const RedditStory: React.FC<{
 	backgroundVideoName: string,
-	startFrame: number,
 	sentences: Array<string>,
 	videoLengths: Array<number>,
 	author: string,
 	subreddit: string
-}> = ({ backgroundVideoName, startFrame, sentences, videoLengths, author, subreddit }) => {
+}> = ({ backgroundVideoName, sentences, videoLengths, author, subreddit }) => {
 	const frame = useCurrentFrame();
 	const videoConfig = useVideoConfig();
 

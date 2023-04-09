@@ -2,7 +2,7 @@ import tts
 import subprocess
 import json
 import reddit_integration
-from utils import get_background_video_name, remove_tts_audio_files, get_logger, remove_file
+from utils import *
 import cv2
 import os
 from TTS.api import TTS
@@ -42,6 +42,7 @@ def main():
     author = post['author']
     subreddit = post['subreddit']
     post_id = post['name']
+    link_to_post = post['url']
 
     tts_instance = TTS(model_name="tts_models/en/vctk/vits")
     sentences = []
@@ -61,8 +62,7 @@ def main():
     try:
         background_video_name = get_background_video_name()
     except Exception as e:
-        log.error("Failed to get background video")
-        log.error(f"Exception {e}")
+        log.error(f'Failed to get background video. Exception {e}')
         remove_tts_audio_files()
         return
 
@@ -73,9 +73,15 @@ def main():
     cap.release()
 
     create_react_config(background_video_name, background_video_frame_count, sentences, video_lengths, author, subreddit)
-    if not os.path.isdir(f'./out/{subreddit}_{post_id}'):
-        log.info(f"Creating video folder ./out/{subreddit}_{post_id}")
-        os.mkdir(f'./out/{subreddit}_{post_id}')
+
+    folder_name = f'{subreddit}_{post_id}'
+    if not os.path.isdir(f'./out/{folder_name}'):
+        log.info(f"Creating video folder ./out/{folder_name}")
+        os.mkdir(f'./out/{folder_name}')
+        
+    with open(f'./out/{folder_name}/{post_id}_desc.txt', 'w') as description_file:
+        log.info('Writing description file...')
+        description_file.write(get_video_description_string(author, subreddit, link_to_post))
 
     generate_video_command = f'cd video-generation; npx remotion render RedditStory ../out/{subreddit}_{post_id}/AmazingRedditStory.mp4 --props=../current-config.json'
     subprocess.run(generate_video_command, shell=True)

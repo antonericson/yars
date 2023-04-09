@@ -114,6 +114,9 @@ def remove_tts_audio_files():
 def remove_file(file_path):
     os.remove(file_path)
 
+def get_video_description_string(author, subreddit, link):
+    return f'Follow for more amazing reddit stories!\n\nSubreddit: r/{subreddit}\nPost by: u/{author}\nLink to reddit post:{link}\n\n#shorts #stories #redditstories #beststories'
+
 def get_logger():
     global _logger
 
