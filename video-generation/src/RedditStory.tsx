@@ -26,18 +26,22 @@ export const RedditStory: React.FC<{
 		let result: JSX.Element[] = []
 		let seq = undefined
 		let from = transitionStart
+		let numberOfFrames = undefined
 		sentences.forEach((sentence, index) => {
+			 numberOfFrames = videoLengths[index] * 30
 			if (index < sentences.length - 1) {
-				seq = <Sequence from={from} key={index} durationInFrames={videoLengths[index] * 30}>
+				seq = <Sequence from={from} key={index} durationInFrames={numberOfFrames}>
 					<Subtitle
 						titleText={sentence}
-						audioFile={`audio/${index}.wav`} />
+						audioFile={`audio/${index}.wav`}
+						numberOfFrames={numberOfFrames} />
 				</Sequence>
 			} else {
 				seq = <Sequence from={from} key={index}>
 					<Subtitle
 						titleText={sentence}
-						audioFile={`audio/${index}.wav`} />
+						audioFile={`audio/${index}.wav`}
+						numberOfFrames={numberOfFrames} />
 				</Sequence>
 			}
 			from = from + Math.round((30 * videoLengths[index])) + 5
