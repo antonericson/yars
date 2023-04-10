@@ -55,7 +55,12 @@ def get_sentences_from_story_2(Title, Text):
                     appendTo = lastStop
                     debugTxt = "fullStop"
                 elif lastParenthesis:
-                    appendTo = max(lastParenthesis - 1, 0)
+                    if textBuffer[lastParenthesis] == '(':
+                        #Don't include this parenthesis
+                        appendTo = max(lastParenthesis - 1, 0)
+                    else:
+                        #Include closing parenthesis
+                        appendTo = lastParenthesis
                     debugTxt = "Parenthesis"
                 elif lastComma:
                     appendTo = lastComma
