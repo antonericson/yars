@@ -1,5 +1,5 @@
-ffmpeg-python >= 0.2.0
-datetime
-opencv-python-headless
-requests
-TTS
+ffmpeg>=1.4
+ffmpeg_python>=0.2.0
+opencv_python_headless>=4.7.0.72
+requests>=2.28.2
+TTS>=0.13.0
