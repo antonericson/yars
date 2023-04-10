@@ -102,15 +102,18 @@ def get_reddit_posts_from_remote():
         all_posts = res.json()['data']['children']
 
         for post in all_posts:
-            if "url_overridden_by_dest" in post['data'] and (not post['data']['subreddit_name_prefixed'] in do_not_filter_url_list): 
+            post_data = post['data']
+            if "url_overridden_by_dest" in post_data and (not post_data['subreddit_name_prefixed'] in do_not_filter_url_list): 
                 continue
-            if post['data']['is_video']:
-                continue
-            if post['data']['over_18']:
-                continue
+            if 'is_video' in post_data:
+                if post_data['is_video']:
+                    continue
+            if 'over_18' in post_data:    
+                if post_data['over_18']:
+                    continue
 
-            json_post = json.dumps(post['data'], indent=4)
-            file_name = './extracted-posts/' + post['data']['name'] + '.json'
+            json_post = json.dumps(post_data, indent=4)
+            file_name = './extracted-posts/' + post_data['name'] + '.json'
             if not os.path.isfile(file_name):
                 with open(file_name, 'w') as json_file:
                     has_downloaded_post = True
