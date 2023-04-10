@@ -7,6 +7,77 @@ import cv2
 import os
 from TTS.api import TTS
 
+
+def get_sentences_from_story_2(Title, Text):
+    maxLen = 120
+    Title = Title.strip()
+    Text = Text.strip()
+    parenthesis = ['(', ')']
+    endMarks = ['.', '!', '?']
+    if not Title == '':
+        if not Title[-1] in endMarks:
+            Title = Title + '.'
+    if not Text == '':
+        if not Text[-1] in endMarks:
+            Text = Text + '.'
+
+    allText = (Title + ' ' + Text).strip()
+    paragraphs = []
+    textBuffer = allText
+    loop_cond = True
+    while loop_cond:
+        lastComma = None
+        lastStop = None
+        lastSpace = None
+        lastParenthesis = None
+        if len(textBuffer) == 0:
+            break
+
+        for id, char in enumerate(textBuffer):
+            if(char in parenthesis):
+                lastParenthesis = id
+            if(char in endMarks):
+                lastStop = id
+            if(char == ','):
+                lastComma = id
+            if(char == ' '):
+                lastSpace = id
+            if id == (len(textBuffer)-1):
+                #Stop of buffer
+                paragraphs.append(textBuffer)
+                loop_cond = False
+                break
+            if id>=(maxLen-1):
+                ##Reached sentence length
+                appendTo = None
+                
+                if lastStop:
+                    appendTo = lastStop
+                    debugTxt = "fullStop"
+                elif lastParenthesis:
+                    appendTo = max(lastParenthesis - 1, 0)
+                    debugTxt = "Parenthesis"
+                elif lastComma:
+                    appendTo = lastComma
+                    debugTxt = "comma"
+                elif lastSpace:
+                    appendTo = lastSpace
+                    debugTxt = "Space"
+                else:
+                    loop_cond = False
+                    break
+
+                #print("adding {} sentence  {}#".format(debugTxt, textBuffer[:appendTo+1]))
+                paragraphs.append(textBuffer[:appendTo+1])
+                textBuffer = textBuffer[appendTo+1:]
+                break
+
+    paragraphs = [x.strip() for x in paragraphs]
+    lens = [len(x) for x in paragraphs]
+    return paragraphs
+
+
+
 def get_sentences_from_story(full_story):
     sentences = []
     for sentence in full_story.split(". "):
