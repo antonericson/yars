@@ -51,7 +51,7 @@ export const RedditStory: React.FC<{
 			<OffthreadVideo
 				muted
 				startFrom={60}
-				src={staticFile(`video/${backgroundVideoName}`)}
+				src={staticFile(`${backgroundVideoName}`)}
 				style={{
 					objectFit: 'cover',
 					width: '100%',

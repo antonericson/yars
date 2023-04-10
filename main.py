@@ -6,6 +6,7 @@ from utils import *
 import cv2
 import os
 from TTS.api import TTS
+import argparse
 
 
 def get_sentences_from_story_2(Title, Text):
@@ -111,59 +112,77 @@ def create_react_config(background_video_name, background_video_frame_count, sen
   with open(f'current-config.json', 'w') as config_file:
     config_file.write(json_config)
 
-def main():
-    log = get_logger()
-    post = reddit_integration.get_post()
-    title = post['title']
-    body = post['selftext']
-    author = post['author']
-    subreddit = post['subreddit']
-    post_id = post['name']
-    link_to_post = f'https://www.reddit.com{post["permalink"]}'
+def main(args):
 
-    tts_instance = TTS(model_name="tts_models/en/vctk/vits")
-    sentences = []
-    if body:
+    generated_videos = 0
+    while(generated_videos < args.number_of_videos):
+        log = get_logger()
+        post = reddit_integration.get_post()
+        title = post['title']
+        body = post['selftext']
+        author = post['author']
+        subreddit = post['subreddit']
+        post_id = post['name']
+        link_to_post = f'https://www.reddit.com{post["permalink"]}'
+
+        tts_instance = TTS(model_name="tts_models/en/vctk/vits")
+        sentences = []
+
         sentences = get_sentences_from_story_2(title, body)
-    else:
-        sentences = get_sentences_from_story_2(subreddit, title)
 
-    video_lengths = tts.generate_tts_for_sentences(tts_instance, sentences)
+        sentences.insert(0, subreddit)
 
-    if(sum(video_lengths) > 58):
-        print("Generated video would become longer than 60 secondss")
-        remove_tts_audio_files()
-        return
-    
-    try:
-        background_video_name = get_background_video_name()
-    except Exception as e:
-        log.error(f'Failed to get background video. Exception {e}')
-        remove_tts_audio_files()
-        return
+        video_lengths = tts.generate_tts_for_sentences(tts_instance, sentences)
 
-    background_video_path = f'./video-generation/public/video/{background_video_name}'
+        if(sum(video_lengths) > 58):
+            print("Generated video would become longer than 60 secondss")
+            remove_tts_audio_files()
+            continue #generate new video
+        try:
+            if args.random_source_video:
+                background_video_name = get_background_video_name(randomVid = True)
+                background_video_path = './video-generation/public/random-video/randVid.mp4'
+                background_video_pathReact = 'random-video/randVid.mp4'
 
-    cap = cv2.VideoCapture(background_video_path)
-    background_video_frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    cap.release()
+            else:
+                background_video_name = get_background_video_name()
+                background_video_path = f'./video-generation/public/video/{background_video_name}'
+                background_video_pathReact = f'video/{background_video_name}'
+        except Exception as e:
+            log.error(f'Failed to get background video. Exception {e}')
+            remove_tts_audio_files()
+            return
 
-    create_react_config(background_video_name, background_video_frame_count, sentences, video_lengths, author, subreddit)
-
-    folder_name = f'{subreddit}_{post_id}'
-    if not os.path.isdir(f'./out/{folder_name}'):
-        log.info(f"Creating video folder ./out/{folder_name}")
-        os.mkdir(f'./out/{folder_name}')
         
-    with open(f'./out/{folder_name}/{post_id}_desc.txt', 'w') as description_file:
-        log.info('Writing description file...')
-        description_file.write(get_video_description_string(author, subreddit, link_to_post))
 
-    generate_video_command = f'cd video-generation; npx remotion render RedditStory ../out/{subreddit}_{post_id}/AmazingRedditStory.mp4 --props=../current-config.json'
-    subprocess.run(generate_video_command, shell=True)
+        cap = cv2.VideoCapture(background_video_path)
+        background_video_frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        cap.release()
 
-    remove_file(background_video_path)
-    remove_tts_audio_files()
+        create_react_config(background_video_pathReact, background_video_frame_count, sentences, video_lengths, author, subreddit)
+
+        folder_name = f'{subreddit}_{post_id}'
+        if not os.path.isdir(f'./out/{folder_name}'):
+            log.info(f"Creating video folder ./out/{folder_name}")
+            os.mkdir(f'./out/{folder_name}')
+            
+        with open(f'./out/{folder_name}/{post_id}_desc.txt', 'w') as description_file:
+            log.info('Writing description file...')
+            description_file.write(get_video_description_string(author, subreddit, link_to_post))
+
+        generate_video_command = f'cd video-generation; npx remotion render RedditStory ../out/{subreddit}_{post_id}/AmazingRedditStory.mp4 --props=../current-config.json'
+        subprocess.run(generate_video_command, shell=True)
+
+        remove_file(background_video_path)
+        remove_tts_audio_files()
+        generated_videos = generated_videos + 1 #It's deemed that a video has been generated
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='YAAAAAARRRRRRRR, Im a pirate!!')
+    
+    # Add your arguments here
+    parser.add_argument('--number_of_videos', '-n', required = False, type = int, default = 1, help='Generates n videos')
+    parser.add_argument('--random_source_video', '-r', action='store_true', required=False, help='Uses a random source video to extract video snippet')
+    
+    args = parser.parse_args()
+    main(args)
