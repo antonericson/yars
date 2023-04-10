@@ -36,7 +36,7 @@ Create a folder in the project root called `background-videos` where you will pl
 python3 main.py
 ```
 
-By default the program will generate one video to the `/out` folder. You can a batch of videos by using the `-n (--number_of_videos)` flag.
+By default the program will generate one video to the `/out` folder. You can create a batch of videos by using the `-n (--number_of_videos)` flag.
 ```bash
 python3 main.py -n 10 # Will (one by one) generate 10 videos to the /out folder
 ```
