@@ -2,7 +2,7 @@
 
 👀 Automatically generate short form vertical videos for social media based on reddit threads. 👀
 
-YARS will automatically fetch popular reddit threads from your choise of subreddits and convert the **title**, **body**, and **subreddit name** to a video for social media. The videos include a voice over reading the reddit thread generated using [Coqcui TTS](https://github.com/coqui-ai/TTS), a video running in the background transcoded and spliced using [ffmpeg-python](https://github.com/kkroening/ffmpeg-python), and subtitles in the middle of the screen all generated with [Remotion](https://github.com/remotion-dev/remotion).
+YARS will automatically fetch popular reddit threads from your choice of subreddits and convert the **title**, **body**, and **subreddit name** to a video for social media. The videos include a voice over reading the reddit thread generated using [Coqcui TTS](https://github.com/coqui-ai/TTS), a video running in the background transcoded and spliced using [ffmpeg-python](https://github.com/kkroening/ffmpeg-python), and subtitles in the middle of the screen all generated with [Remotion](https://github.com/remotion-dev/remotion).
 
 ## Initial setup
 
@@ -36,7 +36,7 @@ Create a folder in the project root called `background-videos` where you will pl
 python3 main.py
 ```
 
-By default the program will generate one video to the `/out` folder. You can a batch of videos by using the `-n (--number_of_videos)` flag.
+By default the program will generate one video to the `/out` folder. You can create a batch of videos by using the `-n (--number_of_videos)` flag.
 ```bash
 python3 main.py -n 10 # Will (one by one) generate 10 videos to the /out folder
 ```
