@@ -9,8 +9,7 @@ import {
 export const Subtitle: React.FC<{
 	titleText: string;
 	audioFile: string;
-	titleColor: string;
-}> = ({titleText, audioFile, titleColor}) => {
+}> = ({titleText, audioFile}) => {
 	const videoConfig = useVideoConfig();
 	const frame = useCurrentFrame();
 	const text = titleText.split(' ').map((t) => ` ${t} `);
@@ -28,7 +27,7 @@ export const Subtitle: React.FC<{
 					bottom: '50%',
 					width: '100%',
 					zIndex: 99,
-					WebkitTextStroke: '2px white'
+					WebkitTextStroke: '2px black'
 				}}
 			>
 				{text.map((t, i) => {
@@ -36,7 +35,7 @@ export const Subtitle: React.FC<{
 						<span
 							key={t+'-'+i}
 							style={{
-								color: titleColor,
+								color: 'white',
 								marginLeft: 20,
 								marginRight: 20,
 								transform: `scale(${spring({

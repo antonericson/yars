@@ -124,15 +124,15 @@ def main():
     tts_instance = TTS(model_name="tts_models/en/vctk/vits")
     sentences = []
     if body:
-        sentences = get_sentences_from_story(title) + get_sentences_from_story(body)
+        sentences = get_sentences_from_story_2(title, body)
     else:
-        sentences = get_sentences_from_story(title)
-    sentences.insert(0, subreddit)
+        sentences = get_sentences_from_story_2(subreddit, title)
 
     video_lengths = tts.generate_tts_for_sentences(tts_instance, sentences)
 
     if(sum(video_lengths) > 58):
         print("Generated video would become longer than 60 secondss")
+        remove_tts_audio_files()
         return
     
     try:

@@ -32,15 +32,13 @@ export const RedditStory: React.FC<{
 				seq = <Sequence from={from} key={index} durationInFrames={videoLengths[index] * 30}>
 					<Subtitle
 						titleText={sentence}
-						audioFile={`audio/${index}.wav`}
-						titleColor={"black"} />
+						audioFile={`audio/${index}.wav`} />
 				</Sequence>
 			} else {
 				seq = <Sequence from={from} key={index}>
 					<Subtitle
 						titleText={sentence}
-						audioFile={`audio/${index}.wav`}
-						titleColor={"black"} />
+						audioFile={`audio/${index}.wav`} />
 				</Sequence>
 			}
 			from = from + Math.round((30 * videoLengths[index])) + 5
@@ -52,6 +50,7 @@ export const RedditStory: React.FC<{
 		<div style={{flex: 1}}>
 			<OffthreadVideo
 				muted
+				startFrom={60}
 				src={staticFile(`video/${backgroundVideoName}`)}
 				style={{
 					objectFit: 'cover',
