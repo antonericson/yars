@@ -7,10 +7,24 @@ import cv2
 import os
 from TTS.api import TTS
 import argparse
+import csv
+import re
+
+def replace_common_shortenings(text):
+    with open('shortenings.txt', 'r') as csvfile:
+        csvreader = csv.reader(csvfile)
+        for row in csvreader:
+            shortening = row[0].strip()
+            expanded = row[1].strip()
+            text = re.sub(rf"\b{shortening}\b", expanded, text)
+    return text
+
+
 
 
 def get_sentences_from_story_2(Title, Text):
-    maxLen = 120
+    preferedLen = 120
+    maxLen = 250
     Title = Title.strip()
     Text = Text.strip()
     parenthesis = ['(', ')']
@@ -41,14 +55,14 @@ def get_sentences_from_story_2(Title, Text):
                 lastStop = id
             if(char == ','):
                 lastComma = id
-            if(char == ' '):
+            if(char == ' ') and (not id>=(preferedLen-1)):
                 lastSpace = id
             if id == (len(textBuffer)-1):
                 #Stop of buffer
                 paragraphs.append(textBuffer)
                 loop_cond = False
                 break
-            if id>=(maxLen-1):
+            if (id>=(preferedLen-1) and lastStop) or id>=(maxLen):
                 ##Reached sentence length
                 appendTo = None
                 
@@ -127,7 +141,8 @@ def main(args):
 
         tts_instance = TTS(model_name="tts_models/en/vctk/vits")
         sentences = []
-
+        title = replace_common_shortenings(title)
+        body = replace_common_shortenings(body)
         sentences = get_sentences_from_story_2(title, body)
 
         sentences.insert(0, subreddit)
