@@ -1,120 +1,16 @@
 import tts
 import subprocess
 import json
-import reddit_integration
-from utils import *
+import reddit_integration as ri
+import utils
 import cv2
-import os
 from TTS.api import TTS
 import argparse
-import csv
-import re
 
-def replace_common_shortenings(text):
-    with open('shortenings.txt', 'r') as csvfile:
-        csvreader = csv.reader(csvfile)
-        for row in csvreader:
-            shortening = row[0].strip()
-            expanded = row[1].strip()
-            text = re.sub(rf"\b{shortening}\b", expanded, text)
-    return text
+BACKGROUND_VIDEO_PATH = './video-generation/public/video/backgroundVideo.mp4'
 
-
-
-
-def get_sentences_from_story_2(Title, Text):
-    preferedLen = 120
-    maxLen = 250
-    Title = Title.strip()
-    Text = Text.strip()
-    parenthesis = ['(', ')']
-    endMarks = ['.', '!', '?']
-    if not Title == '':
-        if not Title[-1] in endMarks:
-            Title = Title + '.'
-    if not Text == '':
-        if not Text[-1] in endMarks:
-            Text = Text + '.'
-
-    allText = (Title + ' ' + Text).strip()
-    paragraphs = []
-    textBuffer = allText
-    loop_cond = True
-    while loop_cond:
-        lastComma = None
-        lastStop = None
-        lastSpace = None
-        lastParenthesis = None
-        if len(textBuffer) == 0:
-            break
-
-        for id, char in enumerate(textBuffer):
-            if(char in parenthesis):
-                lastParenthesis = id
-            if(char in endMarks):
-                lastStop = id
-            if(char == ','):
-                lastComma = id
-            if(char == ' ') and (not id>=(preferedLen-1)):
-                lastSpace = id
-            if id == (len(textBuffer)-1):
-                #Stop of buffer
-                paragraphs.append(textBuffer)
-                loop_cond = False
-                break
-            if (id>=(preferedLen-1) and lastStop) or id>=(maxLen):
-                ##Reached sentence length
-                appendTo = None
-                
-                if lastStop:
-                    appendTo = lastStop
-                    debugTxt = "fullStop"
-                elif lastParenthesis:
-                    if textBuffer[lastParenthesis] == '(':
-                        #Don't include this parenthesis
-                        appendTo = max(lastParenthesis - 1, 0)
-                    else:
-                        #Include closing parenthesis
-                        appendTo = lastParenthesis
-                    debugTxt = "Parenthesis"
-                elif lastComma:
-                    appendTo = lastComma
-                    debugTxt = "comma"
-                elif lastSpace:
-                    appendTo = lastSpace
-                    debugTxt = "Space"
-                else:
-                    loop_cond = False
-                    break
-
-                #print("adding {} sentence  {}#".format(debugTxt, textBuffer[:appendTo+1]))
-                paragraphs.append(textBuffer[:appendTo+1])
-                textBuffer = textBuffer[appendTo+1:]
-                break
-
-    paragraphs = [x.strip() for x in paragraphs]
-    lens = [len(x) for x in paragraphs]
-    return paragraphs
-
-
-
-def get_sentences_from_story(full_story):
-    sentences = []
-    for sentence in full_story.split(". "):
-        sentence.strip()
-        sentence += '.'
-        for word in sentence.split(", "):
-            if len(word.split(" ")) > 20:
-                letters = word.split(" ")
-                sentences.append(' '.join(letters[:len(letters)//2]))
-                sentences.append(' '.join(letters[len(letters)//2:]))
-            else:
-                sentences.append(word)
-    return sentences
-
-def create_react_config(background_video_name, background_video_frame_count, sentences, video_lengths, author, subreddit):
+def create_react_config(background_video_frame_count, sentences, video_lengths, author, subreddit):
   config = {
-    "backgroundVideoName": background_video_name,
     "backgroundVideoFrameCount": background_video_frame_count,
     "sentences": sentences,
     "videoLengths": video_lengths,
@@ -127,11 +23,16 @@ def create_react_config(background_video_name, background_video_frame_count, sen
     config_file.write(json_config)
 
 def main(args):
-
+    log = utils.get_logger()
     generated_videos = 0
+
+    # Create a tts instance early to avoid re-creation on each loop
+    tts_instance = TTS(model_name="tts_models/en/vctk/vits")
+    
     while(generated_videos < args.number_of_videos):
-        log = get_logger()
-        post = reddit_integration.get_post()
+        
+        # Get a reddit post
+        post = ri.get_post()
         title = post['title']
         body = post['selftext']
         author = post['author']
@@ -139,65 +40,58 @@ def main(args):
         post_id = post['name']
         link_to_post = f'https://www.reddit.com{post["permalink"]}'
 
-        tts_instance = TTS(model_name="tts_models/en/vctk/vits")
-        sentences = []
-        title = replace_common_shortenings(title)
-        body = replace_common_shortenings(body)
-        sentences = get_sentences_from_story_2(title, body)
-
-        sentences.insert(0, subreddit)
-
-        video_lengths = tts.generate_tts_for_sentences(tts_instance, sentences)
-
-        if(sum(video_lengths) > 58):
-            print("Generated video would become longer than 60 secondss")
-            remove_tts_audio_files()
-            continue #generate new video
+        # Generate TTS audio files and return list of each files length in seconds
+        # and list of sentences
         try:
-            if args.random_source_video:
-                background_video_name = get_background_video_name(randomVid = True)
-                background_video_path = './video-generation/public/random-video/randVid.mp4'
-                background_video_pathReact = 'random-video/randVid.mp4'
+            [ video_lengths, sentences ] = tts.generate_tts_for_sentences(tts_instance, title, body, subreddit)
+            print(sentences)
+        except AttributeError as e:
+            log.warning(f'Failed to generate TTS: {e}')
+            utils.remove_tts_audio_files()
+            continue
 
-            else:
-                background_video_name = get_background_video_name()
-                background_video_path = f'./video-generation/public/video/{background_video_name}'
-                background_video_pathReact = f'video/{background_video_name}'
+        try:
+            utils.generate_background_video()
         except Exception as e:
-            log.error(f'Failed to get background video. Exception {e}')
-            remove_tts_audio_files()
+            log.error(f'Failed generate background video. Exception {e}')
+            utils.remove_tts_audio_files()
             return
 
-        
-
-        cap = cv2.VideoCapture(background_video_path)
+        # Calculate total frame count of background video
+        cap = cv2.VideoCapture(BACKGROUND_VIDEO_PATH)
         background_video_frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         cap.release()
 
-        create_react_config(background_video_pathReact, background_video_frame_count, sentences, video_lengths, author, subreddit)
+        # Build config file for React to use when rendering
+        create_react_config(background_video_frame_count, sentences, video_lengths, author, subreddit)
 
+        # Verify output folder exists
         folder_name = f'{subreddit}_{post_id}'
-        if not os.path.isdir(f'./out/{folder_name}'):
-            log.info(f"Creating video folder ./out/{folder_name}")
-            os.mkdir(f'./out/{folder_name}')
+        utils.check_for_folder_or_create(f'./out/{folder_name}')
             
+        # Write description file
         with open(f'./out/{folder_name}/{post_id}_desc.txt', 'w') as description_file:
             log.info('Writing description file...')
-            description_file.write(get_video_description_string(author, subreddit, link_to_post))
+            description_file.write(utils.get_video_description_string(author, subreddit, link_to_post))
 
+        # Generate the complete video
+        log.info('Running Remotion render')
         generate_video_command = f'cd video-generation; npx remotion render RedditStory ../out/{subreddit}_{post_id}/AmazingRedditStory.mp4 --props=../current-config.json'
         subprocess.run(generate_video_command, shell=True)
 
-        remove_file(background_video_path)
-        remove_tts_audio_files()
-        generated_videos = generated_videos + 1 #It's deemed that a video has been generated
+        # Clean up temporary files
+        log.info('Removing temporary files')
+        utils.remove_file(BACKGROUND_VIDEO_PATH)
+        utils.remove_tts_audio_files()
 
-if __name__ == "__main__":
+        #It's deemed that a video has been generated
+        generated_videos += 1
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='YAAAAAARRRRRRRR, Im a pirate!!')
     
     # Add your arguments here
     parser.add_argument('--number_of_videos', '-n', required = False, type = int, default = 1, help='Generates n videos')
-    parser.add_argument('--random_source_video', '-r', action='store_true', required=False, help='Uses a random source video to extract video snippet')
     
     args = parser.parse_args()
     main(args)

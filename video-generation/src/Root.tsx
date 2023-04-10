@@ -14,7 +14,6 @@ export const RemotionRoot: React.FC = () => {
 				width={1080}
 				height={1920}
 				defaultProps={{
-					backgroundVideoName: props.backgroundVideoName,
 					sentences: props.sentences,
 					videoLengths: props.videoLengths,
 					author: props.author,

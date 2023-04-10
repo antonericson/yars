@@ -1,7 +1,91 @@
 import contextlib
 import wave
+import csv
+import re
 
-def generate_tts_for_sentences(tts, sentences):
+PARENTHESIS = ['(', ')']
+END_MARKS = ['.', '!', '?']
+
+def replace_common_shortenings(text):
+    with open('shortenings.txt', 'r') as csvfile:
+        csvreader = csv.reader(csvfile)
+        for row in csvreader:
+            shortening = row[0].strip()
+            expanded = row[1].strip()
+            text = re.sub(rf'\b{shortening}\b', expanded, text)
+    return text
+
+def add_full_stop(text):
+    if not text == '':
+        if not text[-1] in END_MARKS:
+            text += '.'
+    return text
+
+def get_sentences_from_story(title, text):
+    prefered_len = 120
+    max_len = 250
+    title = add_full_stop(title.strip())
+    text = add_full_stop(text.strip())
+
+    all_text = (f'{title} {text}').strip()
+    paragraphs = []
+    text_buffer = all_text
+    loop_cond = True
+    while loop_cond:
+        last_comma = last_stop = last_space = last_parenthesis = None
+        if len(text_buffer) == 0:
+            break
+
+        for id, char in enumerate(text_buffer):
+            if(char in PARENTHESIS):
+                last_parenthesis = id
+            if(char in END_MARKS):
+                last_stop = id
+            if(char == ','):
+                last_comma = id
+            if(char == ' ') and (not id>=(prefered_len-1)):
+                last_space = id
+            if id == (len(text_buffer)-1):
+                # Stop of buffer
+                paragraphs.append(text_buffer)
+                loop_cond = False
+                break
+            if (id >= (prefered_len-1) and last_stop) or id>=max_len:
+                # Reached sentence length
+                append_to = None
+                
+                if last_stop:
+                    append_to = last_stop
+                elif last_parenthesis:
+                    if text_buffer[last_parenthesis] == PARENTHESIS[0]:
+                        # Don't include this parenthesis
+                        append_to = max(last_parenthesis - 1, 0)
+                    else:
+                        # Include closing parenthesis
+                        append_to = last_parenthesis
+                elif last_comma:
+                    append_to = last_comma
+                elif last_space:
+                    append_to = last_space
+                else:
+                    loop_cond = False
+                    break
+
+                paragraphs.append(text_buffer[:append_to+1])
+                text_buffer = text_buffer[append_to+1:]
+                break
+
+    return [x.strip() for x in paragraphs]
+
+def generate_tts_for_sentences(tts, title, body, subreddit):
+
+  # Split text into scentences fo easier sync of text in video
+  # If sentences are too long, split at commas/paranthesis/questionmark etc.
+  sentences = [subreddit]
+  title = replace_common_shortenings(title)
+  body = replace_common_shortenings(body)
+  sentences.extend(get_sentences_from_story(title, body))
+
   video_lengths = []
   for i, sentence in enumerate(sentences):
     path_for_react = f'audio/{i}.wav'
@@ -13,4 +97,9 @@ def generate_tts_for_sentences(tts, sentences):
       duration = frames / float(rate)
       video_lengths.append(duration)
   
-  return video_lengths
+  # Discard if combined audio length is over 58 seconds
+  # Max lenght of YouTube Short is 60 seconds
+  if(sum(video_lengths) > 58):
+    raise AttributeError('Provided story would become longer than 60 seconds')
+
+  return [ video_lengths, sentences ]

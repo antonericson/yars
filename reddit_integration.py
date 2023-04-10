@@ -10,9 +10,8 @@ LOCAL_REGISTRY_FILE = './used_posts.json'
 #Ca 60 sekunder för short. blir under 900 tecken.
 def get_post(postId = None):
 
-    if not os.path.isdir('./extracted-posts'):
-        os.mkdir('extracted-posts')
-
+    utils.check_for_folder_or_create('./extracted-posts')
+    
     if not postId:
         postId = get_local_reddit_post_id()
 

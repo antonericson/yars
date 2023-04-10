@@ -1,11 +1,11 @@
-import requests
-import json
 import os, shutil
 import logging
 import time
 import ffmpeg
-from datetime import datetime, timedelta
 from random import randrange, randint
+from datetime import datetime, timedelta
+import requests
+import json
 from yars_secrets import *
 
 _logger = None
@@ -65,74 +65,38 @@ def get_token():
         else:
             return token_data
 
-def get_background_video_name(randomVid = False):
+def generate_background_video():
     log = get_logger()
-    if not os.path.isdir('./video-generation/public/video'):
-        log.info("No public/video folder, creating...")
-        os.mkdir('./video-generation/public/video')
-    
-    if not os.path.isdir('./video-generation/public/random-video'):
-        log.info("No public/randon-video folder, creating...")
-        os.mkdir('./video-generation/public/random-video')
-    
-    if not os.path.isdir('./background-videos'):
-        log.info("No background-videos folder, creating...")
-        os.mkdir('./background-videos')
-    
-    if not os.path.isdir('./background-videos/archive'):
-        log.info("No archive folder, creating...")
-        os.mkdir('./background-videos/archive')
-    if randomVid:
-        # Replace with the path to your input video file
-        input_file = './background-videos/archive/reekVid1.mkv'
-        source_vids = [f'./background-videos/{f}' for f in os.listdir('./background-videos') if os.path.isfile(f'./background-videos/{f}')]
-        source_vids = source_vids + [f'./background-videos/archive/{f}' for f in os.listdir('./background-videos/archive') if os.path.isfile(f'./background-videos/archive/{f}')]
+    required_folders = ['./video-generation/public/video', './background-videos', './background-videos/archive']
+    for folder in required_folders:
+        check_for_folder_or_create(folder)
 
-        rand_vid_path = './video-generation/public/random-video/randVid.mp4'
-        if os.path.isfile(rand_vid_path):
-            os.remove(rand_vid_path)
+    source_vids = [f'./background-videos/{f}' for f in os.listdir('./background-videos') if os.path.isfile(f'./background-videos/{f}')]
 
-        input_file = source_vids[randrange(len(source_vids))]
-        # Generate a random start time within the duration of the input video
-        duration = ffmpeg.probe(input_file)['format']['duration']
-        start_time = randint(5, int(float(duration)) -70)
-        log.info(f'Using video {input_file} to create random snippet starting at {start_time} seconds')
-        # Extract a 1 minute snippet starting from the randomly generated start time
-        (
-            ffmpeg
-            .input(input_file, ss=start_time)
-            .trim(start=0, duration=60)
-            .filter('fps', fps=30, round='up')
-            .output(rand_vid_path)
-            .overwrite_output()
-            .run()
-        )
-        return 'randVid.mp4'
+    vid_path = './video-generation/public/video/backgroundVideo.mp4'
+    if os.path.isfile(vid_path):
+        os.remove(vid_path)
 
-    else:
-        all_videos = os.listdir('./video-generation/public/video')
-        if len(all_videos) == 0:
-            log.info('No pre-cut videos available. Looking for source videos.')
-
-            source_videos = [f for f in os.listdir('./background-videos') if os.path.isfile(f'./background-videos/{f}')]
-
-            if len(source_videos) == 0:
-                log.info('No source videos found in background-videos, exiting')
-                raise Exception()
-            video_to_slice = source_videos[0]
-            [name, filetype] = video_to_slice.split('.')
-            log.info(f'Slicing {video_to_slice}...')
-            ffmpeg.input(f'background-videos/{video_to_slice}').output(f'./video-generation/public/video/{name}%03d.mp4', c="copy", map="0", segment_time='00:01:00', f="segment", reset_timestamps=1).run()
-            all_videos = os.listdir('./video-generation/public/video')
-            log.info(f'Moving {video_to_slice} to archive...')
-            os.rename(f'./background-videos/{video_to_slice}', f'./background-videos/archive/{video_to_slice}')
-        
-        return all_videos[randrange(len(all_videos))]
+    input_file = source_vids[randrange(len(source_vids))]
+    # Generate a random start time within the duration of the input video
+    duration = ffmpeg.probe(input_file)['format']['duration']
+    start_time = randint(5, int(float(duration)) -70)
+    log.info(f'Using video {input_file} to create random snippet starting at {start_time} seconds')
+    # Extract a 1 minute snippet starting from the randomly generated start time
+    (
+        ffmpeg
+        .input(input_file, ss=start_time)
+        .trim(start=0, duration=60)
+        .filter('fps', fps=30, round='up')
+        .output(vid_path)
+        .overwrite_output()
+        .run()
+    )
 
 def remove_tts_audio_files():
-    folder = './video-generation/public/audio'
-    for filename in os.listdir(folder):
-        file_path = os.path.join(folder, filename)
+    tts_folder = './video-generation/public/audio'
+    for filename in os.listdir(tts_folder):
+        file_path = os.path.join(tts_folder, filename)
         try:
             if os.path.isfile(file_path) or os.path.islink(file_path):
                 os.unlink(file_path)
@@ -147,11 +111,24 @@ def remove_file(file_path):
 def get_video_description_string(author, subreddit, link):
     return f'Follow for more amazing reddit stories!\n\nSubreddit: r/{subreddit}\nPost by: u/{author}\nLink to reddit post: {link}\n\n#shorts #stories #redditstories #beststories'
 
+def check_for_folder_or_create(full_path):
+    log = get_logger()
+    if not os.path.isdir(full_path):
+        log.info(f'Creating folder {full_path}')
+        os.mkdir(full_path)
+
 def get_logger():
     global _logger
 
     if _logger is not None:
-        return _logger
+        # If logger already has handlers, return existing logger instance
+        if _logger.hasHandlers():
+            return _logger
+        else:
+            # If logger doesn't have handlers, add new handlers and return logger instance
+            _logger.addHandler(logging.FileHandler(f'./logs/{time.strftime("log_%Y-%m-%d_%H-%M-%S.log")}'))
+            _logger.addHandler(logging.StreamHandler())
+            return _logger
     
     # Create a logger object
     logger = logging.getLogger()
@@ -176,4 +153,5 @@ def get_logger():
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
 
+    _logger = logger
     return logger

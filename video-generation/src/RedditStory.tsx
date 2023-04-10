@@ -3,12 +3,11 @@ import { Subtitle } from './RedditStory/Subtitle';
 import { Attribution } from './RedditStory/Attribution';
 
 export const RedditStory: React.FC<{
-	backgroundVideoName: string,
 	sentences: Array<string>,
 	videoLengths: Array<number>,
 	author: string,
 	subreddit: string
-}> = ({ backgroundVideoName, sentences, videoLengths, author, subreddit }) => {
+}> = ({ sentences, videoLengths, author, subreddit }) => {
 	const frame = useCurrentFrame();
 	const videoConfig = useVideoConfig();
 
@@ -51,7 +50,7 @@ export const RedditStory: React.FC<{
 			<OffthreadVideo
 				muted
 				startFrom={60}
-				src={staticFile(`${backgroundVideoName}`)}
+				src={staticFile(`video/backgroundVideo.mp4`)}
 				style={{
 					objectFit: 'cover',
 					width: '100%',
