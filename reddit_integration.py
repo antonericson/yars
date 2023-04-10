@@ -79,13 +79,16 @@ def get_local_reddit_post_id():
     
 def get_reddit_posts_from_remote():
     has_downloaded_post = False
-    sub_reddits = [  'r/todayilearned',
+    sub_reddits = [ 'r/todayilearned',
                     'r/TrueOffMyChest',
                     'r/Showerthoughts',
                     'r/unpopularopinion',
                     'r/LifeProTips',
-                    'r/AmItheAsshole']
-    
+                    'r/AmItheAsshole',
+                    'r/UnethicalLifeProTips'
+                    'r/ScienceFacts']
+    do_not_filter_url_list = ['r/ScienceFacts',
+                              'r/todayilearned']
     token = utils.get_token()
     # setup our header info, which gives reddit a brief description of our app
     headers = {'User-Agent': 'TextToSpeechVideos/0.0.1'}
@@ -99,7 +102,7 @@ def get_reddit_posts_from_remote():
         all_posts = res.json()['data']['children']
 
         for post in all_posts:
-            if "url_overridden_by_dest" in post['data'] and not post['data']['subreddit'] == 'todayilearned': #Post has url (for all but TIL)
+            if "url_overridden_by_dest" in post['data'] and (not post['data']['subreddit_name_prefixed'] in do_not_filter_url_list): 
                 continue
             if post['data']['is_video']:
                 continue
