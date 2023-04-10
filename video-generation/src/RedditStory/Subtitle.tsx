@@ -9,11 +9,16 @@ import {
 export const Subtitle: React.FC<{
 	titleText: string;
 	audioFile: string;
-}> = ({titleText, audioFile}) => {
+	numberOfFrames: number;
+}> = ({titleText, audioFile, numberOfFrames}) => {
 	const videoConfig = useVideoConfig();
 	const frame = useCurrentFrame();
 	const text = titleText.split(' ').map((t) => ` ${t} `);
-
+	const nWords = text.length;
+	let usedFrames = 0;
+	let nFramesToUse = 0;
+	let startFrame = 0;
+	startFrame = frame
 	return (
 		<>
 			<Audio src={staticFile(audioFile)} />
@@ -30,7 +35,16 @@ export const Subtitle: React.FC<{
 					WebkitTextStroke: '2px black'
 				}}
 			>
+				
 				{text.map((t, i) => {
+					
+					if(i === 0){
+						usedFrames = 0
+					}else{
+						nFramesToUse = Math.round((numberOfFrames*0.80-usedFrames)/(nWords-i+1))
+						usedFrames = usedFrames + nFramesToUse
+					}
+
 					return (
 						<span
 							key={t+'-'+i}
@@ -40,7 +54,7 @@ export const Subtitle: React.FC<{
 								marginRight: 20,
 								transform: `scale(${spring({
 									fps: videoConfig.fps,
-									frame: frame - i * 5,
+									frame:  frame - usedFrames,
 									config: {
 										damping: 100,
 										stiffness: 200,
@@ -53,6 +67,9 @@ export const Subtitle: React.FC<{
 							{t}
 						</span>
 					);
+					
+					
+
 				})}
 			</h1>
 		</>
