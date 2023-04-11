@@ -5,6 +5,11 @@
 YARS will automatically fetch popular reddit threads from your choice of subreddits and convert the **title**, **body**, and **subreddit name** to a video for social media. The videos include a voice over reading the reddit thread generated using [Coqcui TTS](https://github.com/coqui-ai/TTS), a video running in the background transcoded and spliced using [ffmpeg-python](https://github.com/kkroening/ffmpeg-python), and subtitles in the middle of the screen all generated with [Remotion](https://github.com/remotion-dev/remotion).
 
 ## Initial setup
+```bash
+./setup.sh
+```
+
+## Manual initial setup
 
 **Requirements:**
 - Python 3.10.x
