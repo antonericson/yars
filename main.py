@@ -32,7 +32,11 @@ def main(args):
     while(generated_videos < args.number_of_videos):
         
         # Get a reddit post
-        post = ri.get_post()
+        try:
+            post = ri.get_post()
+        except Exception as e:
+            log.warning(e)
+            return
         title = post['title']
         body = post['selftext']
         author = post['author']

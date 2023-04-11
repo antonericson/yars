@@ -1,7 +1,7 @@
 import requests
 import os
 import json
-from random import shuffle
+import random
 from datetime import datetime
 import utils
 
@@ -20,7 +20,7 @@ def get_post(postId = None):
         with open(fileName) as json_file:
             postData = json.load(json_file)
     else:
-        postData = None
+        raise Exception("Some fatal error happened in reddit_integration. As this spaghetti monster does not include any debugging information you're out of luck. sufo rm -rf /  go to bed and get some sleep")
 
 
     return postData
@@ -28,7 +28,8 @@ def get_post(postId = None):
 
 def get_local_available_posts():
     available_posts = [os.path.splitext(i)[0] for i in os.listdir('./extracted-posts/')]
-    shuffle(available_posts)
+    random.seed()
+    random.shuffle(available_posts)
 
     return available_posts
 
@@ -84,7 +85,7 @@ def get_reddit_posts_from_remote():
                     'r/unpopularopinion',
                     'r/LifeProTips',
                     'r/AmItheAsshole',
-                    'r/UnethicalLifeProTips'
+                    'r/UnethicalLifeProTips',
                     'r/ScienceFacts']
     do_not_filter_url_list = ['r/ScienceFacts',
                               'r/todayilearned']
