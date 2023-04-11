@@ -32,9 +32,10 @@ def main(args):
     while(generated_videos < args.number_of_videos):
         
         # Get a reddit post
-        post = ri.get_post()
-        if not post:
-            log.warning("No more reddit posts available")
+        try:
+            post = ri.get_post()
+        except Exception as e:
+            log.warning(e)
             return
         title = post['title']
         body = post['selftext']

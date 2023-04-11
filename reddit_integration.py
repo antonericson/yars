@@ -20,7 +20,7 @@ def get_post(postId = None):
         with open(fileName) as json_file:
             postData = json.load(json_file)
     else:
-        postData = None
+        raise Exception("Some fatal error happened in reddit_integration. As this spaghetti monster does not include any debugging information you're out of luck. sufo rm -rf /  go to bed and get some sleep")
 
 
     return postData
