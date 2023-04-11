@@ -24,6 +24,12 @@ if ! python3.10 --version &>/dev/null; then
   exit 1
 fi
 
+# Verify espeak installation
+if ! espeak --version &>/dev/null; then
+  echo "espeak is not installed. Please install espeak and try again. (sudo apt install espeak)"
+  exit 1
+fi
+
 # Verify Node 19.8.x installation
 if ! node --version | grep -qE "^v19\.8\."; then
   echo "Node 19.8.x is not installed. Please install Node 19.8.x and try again."
@@ -82,6 +88,13 @@ if ! dir_exists "video-generation/public/video"; then
   echo "video-generation/public/video directory created successfully."
 else
   echo "video-generation/public/video folder already exists. Skipping generation."
+fi
+
+if ! dir_exists "logs"; then
+  mkdir logs
+  echo "logs directory created successfully."
+else
+  echo "logs folder already exists. Skipping generation."
 fi
 
 echo "Setup completed successfully!"
