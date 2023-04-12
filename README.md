@@ -1,5 +1,7 @@
 #  🤖 YARS - Yet Another Reddit Story
 
+[![ESLint](https://github.com/antonericson/yars/actions/workflows/eslint.yml/badge.svg)](https://github.com/antonericson/yars/actions/workflows/eslint.yml) [![Pylint](https://github.com/antonericson/yars/actions/workflows/pylint.yml/badge.svg)](https://github.com/antonericson/yars/actions/workflows/pylint.yml)
+
 👀 Automatically generate short form vertical videos for social media based on reddit threads. 👀
 
 YARS will automatically fetch popular reddit threads from your choice of subreddits and convert the **title**, **body**, and **subreddit name** to a video for social media. The videos include a voice over reading the reddit thread generated using [Coqcui TTS](https://github.com/coqui-ai/TTS), a video running in the background transcoded and spliced using [ffmpeg-python](https://github.com/kkroening/ffmpeg-python), and subtitles in the middle of the screen all generated with [Remotion](https://github.com/remotion-dev/remotion).
@@ -28,10 +30,10 @@ npm install
 
 Create `yars_secrets.py` at the project root with the following code
 ```JavaScript
-reddit_user = 'Your_reddit_username'
-reddit_pw = 'Your_reddit_password'
-key = 'Your_reddit_key'
-secret = 'Your_reddit_secret'
+REDDIT_USER = 'Your_reddit_username'
+REDDIT_PW = 'Your_reddit_password'
+KEY = 'Your_reddit_key'
+SECRET = 'Your_reddit_secret'
 ```
 
 Create a folder in the project root called `background-videos` where you will place the source background video files. These will be transcoded and the audio will be removed during video generation.
