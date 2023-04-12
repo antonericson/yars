@@ -1,14 +1,15 @@
-import os, shutil
+import os
+import shutil
 import logging
 import time
-import ffmpeg
 from random import randrange, randint
 from datetime import datetime, timedelta
-import requests
 import json
-from yars_secrets import *
+import ffmpeg
+import requests
+import yars_secrets
 
-_logger = None
+_LOGGER = None
 
 def get_token():
     if not os.path.isfile("token.json"):
@@ -18,52 +19,50 @@ def get_token():
         "fetched": "19990408T163321"
         }
         json_obj = json.dumps(base_dict, indent=4)
-        with open("token.json", "w") as outfile:
+        with open("token.json", "w", encoding='UTF-8') as outfile:
             outfile.write(json_obj)
 
-    with open('token.json') as json_file:
+    with open('token.json', encoding='UTF-8') as json_file:
         token_data = json.load(json_file)
-        valid_until = datetime.strptime(token_data['valid_until'], '%Y%m%dT%H%M%S') 
+        valid_until = datetime.strptime(token_data['valid_until'], '%Y%m%dT%H%M%S')
 
         if valid_until < (datetime.now() + timedelta(hours=1)):
-
             os.remove('token.json')
 
             # note that CLIENT_ID refers to 'personal use script' and SECRET_TOKEN to 'token'
-            auth = requests.auth.HTTPBasicAuth(key, secret)
+            auth = requests.auth.HTTPBasicAuth(yars_secrets.key, yars_secrets.secret)
 
             # here we pass our login method (password), username, and password
             data = {'grant_type': 'password',
-                    'username': reddit_user,
-                    'password': reddit_pw}
-            
+                    'username': yars_secrets.reddit_user,
+                    'password': yars_secrets.reddit_pw}
+
             # setup our header info, which gives reddit a brief description of our app
             headers = {'User-Agent': 'TextToSpeechVideos/0.0.1'}
 
             # send our request for an OAuth token
             res_auth = requests.post('https://www.reddit.com/api/v1/access_token',
-                                auth=auth, data=data, headers=headers)
+                                auth=auth, data=data, headers=headers, timeout=30)
 
             #convert response to JSON and pull access_token value
             token = res_auth.json()['access_token']
 
             sec_delta = res_auth.json()['expires_in']
 
-            time = datetime.now()
-            valid_until = time + timedelta(seconds=sec_delta)
-            dict = {
+            current_time = datetime.now()
+            valid_until = current_time + timedelta(seconds=sec_delta)
+            token_data = {
                 "token": token,
                 "valid_until": valid_until.strftime("%Y%m%dT%H%M%S"),
                 "fetched": time.strftime("%Y%m%dT%H%M%S")
             }
-            json_obj = json.dumps(dict, indent=4)
+            json_obj = json.dumps(token_data, indent=4)
 
-            with open("token.json", "w") as outfile:
+            with open("token.json", "w", encoding='UTF-8') as outfile:
                 outfile.write(json_obj)
-            return dict
-
-        else:
             return token_data
+
+        return token_data
 
 def generate_background_video():
     log = get_logger()
@@ -71,7 +70,8 @@ def generate_background_video():
     for folder in required_folders:
         check_for_folder_or_create(folder)
 
-    source_vids = [f'./background-videos/{f}' for f in os.listdir('./background-videos') if os.path.isfile(f'./background-videos/{f}')]
+    source_vids = [f'./background-videos/{f}' for f in os.listdir('./background-videos')\
+        if os.path.isfile(f'./background-videos/{f}')]
 
     vid_path = './video-generation/public/video/backgroundVideo.mp4'
     if os.path.isfile(vid_path):
@@ -81,7 +81,7 @@ def generate_background_video():
     # Generate a random start time within the duration of the input video
     duration = ffmpeg.probe(input_file)['format']['duration']
     start_time = randint(5, int(float(duration)) -70)
-    log.info(f'Using video {input_file} to create random snippet starting at {start_time} seconds')
+    log.info('Using video %s to create random snippet starting at %s seconds', input_file, start_time)
     # Extract a 1 minute snippet starting from the randomly generated start time
     (
         ffmpeg
@@ -95,6 +95,7 @@ def generate_background_video():
 
 def remove_tts_audio_files():
     tts_folder = './video-generation/public/audio'
+    log = get_logger()
     for filename in os.listdir(tts_folder):
         file_path = os.path.join(tts_folder, filename)
         try:
@@ -102,35 +103,38 @@ def remove_tts_audio_files():
                 os.unlink(file_path)
             elif os.path.isdir(file_path):
                 shutil.rmtree(file_path)
-        except Exception as e:
-            print('Failed to delete %s. Reason: %s' % (file_path, e))
+        except RuntimeError as error:
+            log.error('Failed to delete %s. Reason: %s', file_path, error)
 
 def remove_file(file_path):
     os.remove(file_path)
 
 def get_video_description_string(author, subreddit, link):
-    return f'Follow for more amazing reddit stories!\n\nSubreddit: r/{subreddit}\nPost by: u/{author}\nLink to reddit post: {link}\n\n#shorts #stories #redditstories #beststories'
+    return f'Follow for more amazing reddit stories!\n\nSubreddit: \
+        r/{subreddit}\nPost by: u/{author}\n\
+            Link to reddit post: {link}\n\n#shorts #stories #redditstories #beststories'
 
 def check_for_folder_or_create(full_path):
     log = get_logger()
     if not os.path.isdir(full_path):
-        log.info(f'Creating folder {full_path}')
+        log.info('Creating folder %s', full_path)
         os.mkdir(full_path)
 
 def get_logger():
-    global _logger
+    # pylint: disable-next=global-statement
+    global _LOGGER
 
-    if _logger is not None:
+    if _LOGGER is not None:
         # If logger already has handlers, return existing logger instance
-        if _logger.hasHandlers():
-            return _logger
+        if _LOGGER.hasHandlers():
+            return _LOGGER
         else:
             # If logger doesn't have handlers, add new handlers and return logger instance
-            _logger.addHandler(logging.FileHandler(f'./logs/{time.strftime("log_%Y-%m-%d_%H-%M-%S.log")}'))
-            _logger.addHandler(logging.StreamHandler())
-            return _logger
-    
-    # Create a logger object
+            _LOGGER.addHandler(logging.FileHandler(f'./logs/{time.strftime("log_%Y-%m-%d_%H-%M-%S.log")}'))
+            _LOGGER.addHandler(logging.StreamHandler())
+            return _LOGGER
+
+    #Create a logger object
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
 
@@ -153,5 +157,5 @@ def get_logger():
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
 
-    _logger = logger
+    _LOGGER = logger
     return logger

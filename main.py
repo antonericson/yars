@@ -1,26 +1,27 @@
-import tts
 import subprocess
 import json
+import argparse
+import cv2
+# pylint: disable-next=import-error
+from TTS.api import TTS
 import reddit_integration as ri
 import utils
-import cv2
-from TTS.api import TTS
-import argparse
+import tts
 
 BACKGROUND_VIDEO_PATH = './video-generation/public/video/backgroundVideo.mp4'
 
 def create_react_config(background_video_frame_count, sentences, video_lengths, author, subreddit):
-  config = {
-    "backgroundVideoFrameCount": background_video_frame_count,
-    "sentences": sentences,
-    "videoLengths": video_lengths,
-    "totalLength": sum(video_lengths),
-    "author": author,
-    "subreddit": subreddit
-  }
-  json_config = json.dumps(config)
-  with open(f'current-config.json', 'w') as config_file:
-    config_file.write(json_config)
+    config = {
+        "backgroundVideoFrameCount": background_video_frame_count,
+        "sentences": sentences,
+        "videoLengths": video_lengths,
+        "totalLength": sum(video_lengths),
+        "author": author,
+        "subreddit": subreddit
+    }
+    json_config = json.dumps(config)
+    with open('current-config.json', 'w', encoding='UTF-8') as config_file:
+        config_file.write(json_config)
 
 def main(args):
     log = utils.get_logger()
@@ -28,14 +29,13 @@ def main(args):
 
     # Create a tts instance early to avoid re-creation on each loop
     tts_instance = TTS(model_name="tts_models/en/vctk/vits")
-    
-    while(generated_videos < args.number_of_videos):
-        
+
+    while generated_videos < args.number_of_videos :
         # Get a reddit post
         try:
             post = ri.get_post()
-        except Exception as e:
-            log.warning(e)
+        except ImportError as error:
+            log.warning(error)
             return
         title = post['title']
         body = post['selftext']
@@ -49,20 +49,22 @@ def main(args):
         try:
             [ video_lengths, sentences ] = tts.generate_tts_for_sentences(tts_instance, title, body, subreddit)
             print(sentences)
-        except AttributeError as e:
-            log.warning(f'Failed to generate TTS: {e}')
+        except AttributeError as error:
+            log.warning('Failed to generate TTS: %s', error)
             utils.remove_tts_audio_files()
             continue
 
         try:
             utils.generate_background_video()
-        except Exception as e:
-            log.error(f'Failed generate background video. Exception {e}')
+        except Exception as error:
+            log.warning('Failed to generate Background video: %s', error)
             utils.remove_tts_audio_files()
             return
 
         # Calculate total frame count of background video
+        # pylint: disable-next=no-member
         cap = cv2.VideoCapture(BACKGROUND_VIDEO_PATH)
+        # pylint: disable-next=no-member
         background_video_frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         cap.release()
 
@@ -72,16 +74,18 @@ def main(args):
         # Verify output folder exists
         folder_name = f'{subreddit}_{post_id}'
         utils.check_for_folder_or_create(f'./out/{folder_name}')
-            
+
         # Write description file
-        with open(f'./out/{folder_name}/{post_id}_desc.txt', 'w') as description_file:
+        with open(f'./out/{folder_name}/{post_id}_desc.txt', 'w', encoding='UTF-8') as description_file:
             log.info('Writing description file...')
             description_file.write(utils.get_video_description_string(author, subreddit, link_to_post))
 
         # Generate the complete video
         log.info('Running Remotion render')
-        generate_video_command = f'cd video-generation; npx remotion render RedditStory ../out/{subreddit}_{post_id}/AmazingRedditStory.mp4 --props=../current-config.json'
-        subprocess.run(generate_video_command, shell=True)
+        generate_video_command = f'cd video-generation; npx remotion render RedditStory\
+            ../out/{subreddit}_{post_id}/AmazingRedditStory.mp4 --props=../current-config.json'
+
+        subprocess.run(generate_video_command, shell=True, check=False)
 
         # Clean up temporary files
         log.info('Removing temporary files')
@@ -93,9 +97,14 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='YAAAAAARRRRRRRR, Im a pirate!!')
-    
+
     # Add your arguments here
-    parser.add_argument('--number_of_videos', '-n', required = False, type = int, default = 1, help='Generates n videos')
-    
-    args = parser.parse_args()
-    main(args)
+    parser.add_argument(
+        '--number_of_videos',
+        '-n',
+        required = False,
+        type = int,
+        default = 1,
+        help='Generates n videos')
+
+    main(parser.parse_args())

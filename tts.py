@@ -7,7 +7,7 @@ PARENTHESIS = ['(', ')']
 END_MARKS = ['.', '!', '?']
 
 def replace_common_shortenings(text):
-    with open('shortenings.txt', 'r') as csvfile:
+    with open('shortenings.txt', 'r', encoding='UTF-8') as csvfile:
         csvreader = csv.reader(csvfile)
         for row in csvreader:
             shortening = row[0].strip()
@@ -22,7 +22,7 @@ def add_full_stop(text):
     return text
 
 def get_sentences_from_story(title, text):
-    prefered_len = 120
+    preferred_len = 120
     max_len = 250
     title = add_full_stop(title.strip())
     text = add_full_stop(text.strip())
@@ -36,24 +36,24 @@ def get_sentences_from_story(title, text):
         if len(text_buffer) == 0:
             break
 
-        for id, char in enumerate(text_buffer):
-            if(char in PARENTHESIS):
-                last_parenthesis = id
-            if(char in END_MARKS):
-                last_stop = id
-            if(char == ','):
-                last_comma = id
-            if(char == ' ') and (not id>=(prefered_len-1)):
-                last_space = id
-            if id == (len(text_buffer)-1):
+        for i, char in enumerate(text_buffer):
+            if char in PARENTHESIS:
+                last_parenthesis = i
+            if char in END_MARKS:
+                last_stop = i
+            if char == ',':
+                last_comma = i
+            if(char == ' ') and (not i>=(preferred_len-1)):
+                last_space = i
+            if i == (len(text_buffer)-1):
                 # Stop of buffer
                 paragraphs.append(text_buffer)
                 loop_cond = False
                 break
-            if (id >= (prefered_len-1) and last_stop) or id>=max_len:
+            if (i >= (preferred_len-1) and last_stop) or i>=max_len:
                 # Reached sentence length
                 append_to = None
-                
+
                 if last_stop:
                     append_to = last_stop
                 elif last_parenthesis:
@@ -79,27 +79,27 @@ def get_sentences_from_story(title, text):
 
 def generate_tts_for_sentences(tts, title, body, subreddit):
 
-  # Split text into scentences fo easier sync of text in video
-  # If sentences are too long, split at commas/paranthesis/questionmark etc.
-  sentences = [subreddit]
-  title = replace_common_shortenings(title)
-  body = replace_common_shortenings(body)
-  sentences.extend(get_sentences_from_story(title, body))
+    # Split text into sentences fo easier sync of text in video
+    # If sentences are too long, split at commas/parenthesis/question mark etc.
+    sentences = [subreddit]
+    title = replace_common_shortenings(title)
+    body = replace_common_shortenings(body)
+    sentences.extend(get_sentences_from_story(title, body))
 
-  video_lengths = []
-  for i, sentence in enumerate(sentences):
-    path_for_react = f'audio/{i}.wav'
-    full_path = f'./video-generation/public/{path_for_react}'
-    tts.tts_to_file(text=sentence, speaker="p273", file_path=full_path)
-    with contextlib.closing(wave.open(full_path,'r')) as f:
-      frames = f.getnframes()
-      rate = f.getframerate()
-      duration = frames / float(rate)
-      video_lengths.append(duration)
-  
-  # Discard if combined audio length is over 58 seconds
-  # Max lenght of YouTube Short is 60 seconds
-  if(sum(video_lengths) > 58):
-    raise AttributeError('Provided story would become longer than 60 seconds')
+    video_lengths = []
+    for i, sentence in enumerate(sentences):
+        path_for_react = f'audio/{i}.wav'
+        full_path = f'./video-generation/public/{path_for_react}'
+        tts.tts_to_file(text=sentence, speaker="p273", file_path=full_path)
+        with contextlib.closing(wave.open(full_path,'r')) as audio:
+            frames = audio.getnframes()
+            rate = audio.getframerate()
+            duration = frames / float(rate)
+            video_lengths.append(duration)
 
-  return [ video_lengths, sentences ]
+    # Discard if combined audio length is over 58 seconds
+    # Max length of YouTube Short is 60 seconds
+    if sum(video_lengths) > 58 :
+        raise AttributeError('Provided story would become longer than 60 seconds')
+
+    return [ video_lengths, sentences ]
