@@ -30,12 +30,12 @@ def get_token():
             os.remove('token.json')
 
             # note that CLIENT_ID refers to 'personal use script' and SECRET_TOKEN to 'token'
-            auth = requests.auth.HTTPBasicAuth(yars_secrets.key, yars_secrets.secret)
+            auth = requests.auth.HTTPBasicAuth(yars_secrets.KEY, yars_secrets.SECRET)
 
             # here we pass our login method (password), username, and password
             data = {'grant_type': 'password',
-                    'username': yars_secrets.reddit_user,
-                    'password': yars_secrets.reddit_pw}
+                    'username': yars_secrets.REDDIT_USER,
+                    'password': yars_secrets.REDDIT_PW}
 
             # setup our header info, which gives reddit a brief description of our app
             headers = {'User-Agent': 'TextToSpeechVideos/0.0.1'}
@@ -128,11 +128,11 @@ def get_logger():
         # If logger already has handlers, return existing logger instance
         if _LOGGER.hasHandlers():
             return _LOGGER
-        else:
-            # If logger doesn't have handlers, add new handlers and return logger instance
-            _LOGGER.addHandler(logging.FileHandler(f'./logs/{time.strftime("log_%Y-%m-%d_%H-%M-%S.log")}'))
-            _LOGGER.addHandler(logging.StreamHandler())
-            return _LOGGER
+
+        # If logger doesn't have handlers, add new handlers and return logger instance
+        _LOGGER.addHandler(logging.FileHandler(f'./logs/{time.strftime("log_%Y-%m-%d_%H-%M-%S.log")}'))
+        _LOGGER.addHandler(logging.StreamHandler())
+        return _LOGGER
 
     #Create a logger object
     logger = logging.getLogger()

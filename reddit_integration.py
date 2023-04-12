@@ -57,28 +57,27 @@ def get_local_reddit_post_id():
         with open(LOCAL_REGISTRY_FILE, "w", encoding='UTF-8') as used_posts_file:
             used_posts_file.write(json.dumps(used_files_dict, indent=4))
         return available_posts[0]
-    else:
-        for post in available_posts:
-            post_has_been_used = False
-            for used_posts in used_files_dict:
-                if post == used_posts['post_id']:
-                    post_has_been_used = True
-                    break
+    for post in available_posts:
+        post_has_been_used = False
+        for used_posts in used_files_dict:
+            if post == used_posts['post_id']:
+                post_has_been_used = True
+                break
 
-            if not post_has_been_used:
-                used_files_dict.append({"post_id": post,
-                                        "extracted": datetime.now().strftime("%Y%m%dT%H%M%S")})
-                with open(LOCAL_REGISTRY_FILE, "w", encoding='UTF-8') as used_posts_file:
-                    used_posts_file.write(
-                        json.dumps(used_files_dict, indent=4))
-                return post
+        if not post_has_been_used:
+            used_files_dict.append({"post_id": post,
+                                    "extracted": datetime.now().strftime("%Y%m%dT%H%M%S")})
+            with open(LOCAL_REGISTRY_FILE, "w", encoding='UTF-8') as used_posts_file:
+                used_posts_file.write(
+                    json.dumps(used_files_dict, indent=4))
+            return post
 
-        # If scripts comes here and there's no post available to return then grab more posts
+    # If scripts comes here and there's no post available to return then grab more posts
 
-        if get_reddit_posts_from_remote():
-            return get_local_reddit_post_id()
-        else:
-            return None
+    if get_reddit_posts_from_remote():
+        return get_local_reddit_post_id()
+
+    return None
 
 
 def get_reddit_posts_from_remote():
