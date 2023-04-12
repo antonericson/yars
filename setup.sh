@@ -46,10 +46,10 @@ cd ..
 
 # Create additional files and directories if they do not exist
 if ! file_exists "yars_secrets.py"; then
-  echo "reddit_user = 'Your_reddit_username'" > yars_secrets.py
-  echo "reddit_pw = 'Your_reddit_password'" >> yars_secrets.py
-  echo "key = 'Your_reddit_key'" >> yars_secrets.py
-  echo "secret = 'Your_reddit_secret'" >> yars_secrets.py
+  echo "REDDIT_USER = 'Your_reddit_username'" > yars_secrets.py
+  echo "REDDIT_PW = 'Your_reddit_password'" >> yars_secrets.py
+  echo "KEY = 'Your_reddit_key'" >> yars_secrets.py
+  echo "SECRET = 'Your_reddit_secret'" >> yars_secrets.py
   echo "yars_secrets.py generated successfully."
 else
   echo "yars_secrets.py already exists. Skipping generation."
