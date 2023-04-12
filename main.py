@@ -45,7 +45,7 @@ def main(args):
         link_to_post = f'https://www.reddit.com{post["permalink"]}'
 
         # Generate TTS audio files and return list of each files length in seconds
-        # and list of sentences
+        # and list of sentences.
         try:
             [ video_lengths, sentences ] = tts.generate_tts_for_sentences(tts_instance, title, body, subreddit)
             print(sentences)
