@@ -10,16 +10,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Navigate to video-generation
-      run: cd video-generation
-
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
         node-version: 19  # Change this to the desired Node.js version
 
     - name: Install dependencies
-      run: npm install
+      run: cd video-generation && npm install
 
     - name: Run ESLint
-      run: npx eslint src --ext ts,tsx,js,jsx && tsc  # Change this to your eslint command and options
+      run: cd video-generation && npx eslint src --ext ts,tsx,js,jsx && tsc  # Change this to your eslint command and options
