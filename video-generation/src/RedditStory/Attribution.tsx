@@ -9,18 +9,18 @@ export const Attribution: React.FC<{
             <div
                 style={{
                     fontFamily: 'SF Pro Text, Helvetica, Arial',
-					fontSize: 40,
+                    fontSize: 40,
                     color: 'white',
-					textAlign: 'left',
-					position: 'absolute',
-					bottom: '5%',
+                    textAlign: 'left',
+                    position: 'absolute',
+                    bottom: '5%',
                     paddingLeft: '30px',
-					width: '50%',
-					zIndex: 99,
-					WebkitTextStroke: '1px black'
+                    width: '50%',
+                    zIndex: 99,
+                    WebkitTextStroke: '1px black'
                 }}
             >
-            <p>Author: {author}<br/>r/{subreddit}</p>
+                <p>Author: {author}<br/>r/{subreddit}</p>
             </div>
         </>
     )
