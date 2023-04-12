@@ -19,7 +19,7 @@ jobs:
         node-version: 19  # Change this to the desired Node.js version
 
     - name: Install dependencies
-      run: npm ci
+      run: npm install
 
     - name: Run ESLint
       run: npx eslint src --ext ts,tsx,js,jsx && tsc  # Change this to your eslint command and options
