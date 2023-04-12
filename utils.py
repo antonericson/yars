@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import json
 import ffmpeg
 import requests
+# pylint: disable-next=import-error
 import yars_secrets
 
 _LOGGER = None
