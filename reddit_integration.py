@@ -5,83 +5,70 @@ from datetime import datetime
 import requests
 import utils
 
-LOCAL_REGISTRY_FILE = './used_posts.json'
+USED_POSTS_FILE = './used_posts.json'
+LOCAL_POSTS_DIRECTORY = './extracted-posts'
 
 def get_post(post_id=None):
+    log = utils.get_logger()
+    utils.check_for_folder_or_create(LOCAL_POSTS_DIRECTORY)
 
-    utils.check_for_folder_or_create('./extracted-posts')
-
-    if not post_id:
-        post_id = get_local_reddit_post_id()
-
+    # Post id only set if generating with specific given post id
+    # Ignore all logic and only generate from this post id
     if post_id:
-        file_name = './extracted-posts/' + post_id + '.json'
+        file_name = f'{LOCAL_POSTS_DIRECTORY}/{post_id}.json'
         with open(file_name, encoding='UTF-8') as json_file:
-            post_data = json.load(json_file)
-    else:
-        raise ImportError("Some error happened in reddit_integration.\
-            As this spaghetti monster does not include any debugging information you're out of luck.\
-                sudo rm -rf /  go to bed and get some sleep")
+            specific_post = json.load(json_file)
+        return specific_post
+
+    # Load used posts list from file
+    used_post_objects = get_used_post_objects()
+    # Check if any local posts are availible
+    # If not fetch more and store as json files
+    local_post_files = os.listdir(LOCAL_POSTS_DIRECTORY)
+    if not local_post_files:
+        fetch_new_posts()
+
+    local_post_files = os.listdir(LOCAL_POSTS_DIRECTORY)
+    # Remove all used posts from local post folder
+    for local_post_id in [post.split('.')[0] for post in local_post_files]:
+        if has_post_been_used(used_post_objects, local_post_id):
+            log.info('%s has already been used, deleting', local_post_id)
+            utils.remove_file(f'{LOCAL_POSTS_DIRECTORY}/{local_post_id}.json')
+
+    # Get updated list of local posts
+    local_post_files = os.listdir(LOCAL_POSTS_DIRECTORY)
+    random.seed()
+    random.shuffle(local_post_files)
+
+    post_file_to_use = local_post_files[0]
+    add_post_to_used_posts(used_post_objects, post_file_to_use.split('.')[0])
+
+    # Get post data from post-file
+    with open(f'{LOCAL_POSTS_DIRECTORY}/{post_file_to_use}', 'r', encoding='UTF-8') as json_file:
+        post_data = json.load(json_file)
 
     return post_data
 
+def has_post_been_used(used_post_objects, post_id):
+    for post_object in used_post_objects:
+        if post_id == post_object['post_id']:
+            return True
+    return False
 
-def get_local_available_posts():
-    available_posts = [os.path.splitext(i)[0]
-                       for i in os.listdir('./extracted-posts/')]
-    random.seed()
-    random.shuffle(available_posts)
-
-    return available_posts
-
-
-def get_local_reddit_post_id():
-
-    if not os.path.isfile(LOCAL_REGISTRY_FILE):
-        used_files_dict = []
-    else:
-        with open(LOCAL_REGISTRY_FILE, encoding='UTF-8') as used_posts_file:
-            used_files_dict = json.load(used_posts_file)
-
-    available_posts = get_local_available_posts()
-    if not available_posts:
-        if get_reddit_posts_from_remote():
-            available_posts = get_local_available_posts()
-        else:
-            return None
-
-    if not used_files_dict:
-        # Empty
-        used_files_dict.append({"post_id": available_posts[0],
+def add_post_to_used_posts(used_post_objects, post_id):
+    used_post_objects.append({"post_id": post_id,
                                 "extracted": datetime.now().strftime("%Y%m%dT%H%M%S")})
-        with open(LOCAL_REGISTRY_FILE, "w", encoding='UTF-8') as used_posts_file:
-            used_posts_file.write(json.dumps(used_files_dict, indent=4))
-        return available_posts[0]
-    for post in available_posts:
-        post_has_been_used = False
-        for used_posts in used_files_dict:
-            if post == used_posts['post_id']:
-                post_has_been_used = True
-                break
 
-        if not post_has_been_used:
-            used_files_dict.append({"post_id": post,
-                                    "extracted": datetime.now().strftime("%Y%m%dT%H%M%S")})
-            with open(LOCAL_REGISTRY_FILE, "w", encoding='UTF-8') as used_posts_file:
-                used_posts_file.write(
-                    json.dumps(used_files_dict, indent=4))
-            return post
+    with open(USED_POSTS_FILE, "w", encoding='UTF-8') as used_posts_file:
+        used_posts_file.write(
+            json.dumps(used_post_objects, indent=4))
 
-    # If scripts comes here and there's no post available to return then grab more posts
+def get_used_post_objects():
+    with open(USED_POSTS_FILE, 'r', encoding='UTF-8') as used_posts_file:
+        used_post_objects = json.load(used_posts_file)
+    return used_post_objects
 
-    if get_reddit_posts_from_remote():
-        return get_local_reddit_post_id()
-
-    return None
-
-
-def get_reddit_posts_from_remote():
-    has_downloaded_post = False
+def fetch_new_posts():
     sub_reddits = ['r/todayilearned',
                    'r/TrueOffMyChest',
                    'r/Showerthoughts',
@@ -117,10 +104,7 @@ def get_reddit_posts_from_remote():
                     continue
 
             json_post = json.dumps(post_data, indent=4)
-            file_name = './extracted-posts/' + post_data['name'] + '.json'
+            file_name = f'{LOCAL_POSTS_DIRECTORY}/{post_data["name"]}.json'
             if not os.path.isfile(file_name):
                 with open(file_name, 'w', encoding='UTF-8') as json_file:
-                    has_downloaded_post = True
                     json_file.write(json_post)
-
-    return has_downloaded_post

@@ -9,6 +9,7 @@ import utils
 import tts
 
 BACKGROUND_VIDEO_PATH = './video-generation/public/video/backgroundVideo.mp4'
+OUTPUT_FILE_BUZZ_WORDS = 'reddit_story_crazy_reading_reddit_short_funny_sad_insane'
 
 def create_react_config(background_video_frame_count, sentences, video_lengths, author, subreddit):
     config = {
@@ -83,9 +84,13 @@ def main(args):
         # Generate the complete video
         log.info('Running Remotion render')
         generate_video_command = f'cd video-generation; npx remotion render RedditStory\
-            ../out/{subreddit}_{post_id}/AmazingRedditStory.mp4 --props=../current-config.json'
+            ../out/{subreddit}_{post_id}/{subreddit}_{OUTPUT_FILE_BUZZ_WORDS}.mp4 --props=../current-config.json'
+        preview_video_command = 'cd video-generation; npx remotion preview RedditStory --props=../current-config.json'
 
-        subprocess.run(generate_video_command, shell=True, check=False)
+        if not args.preview:
+            subprocess.run(generate_video_command, shell=True, check=False)
+        else:
+            subprocess.run(preview_video_command, shell=True, check=False)
 
         # Clean up temporary files
         log.info('Removing temporary files')
@@ -96,7 +101,7 @@ def main(args):
         generated_videos += 1
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='YAAAAAARRRRRRRR, Im a pirate!!')
+    parser = argparse.ArgumentParser(description='YAAAAAARRRRRRRR(s), Im a pirate!!')
 
     # Add your arguments here
     parser.add_argument(
@@ -106,5 +111,13 @@ if __name__ == '__main__':
         type = int,
         default = 1,
         help='Generates n videos')
+
+    parser.add_argument(
+        '--preview',
+        '-p',
+        required=False,
+        action='store_true',
+        help='Used to run remotion in preview mode instead of render mode.'
+    )
 
     main(parser.parse_args())
