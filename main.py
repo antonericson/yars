@@ -7,11 +7,14 @@ import reddit_integration as ri
 import utils
 import tts
 
+# Define paths and buzz words for output files
 BACKGROUND_VIDEO_PATH = './video-generation/public/video/backgroundVideo.mp4'
 OUTPUT_FILE_BUZZ_WORDS = 'reddit_story_crazy_reading_reddit_short_funny_sad_insane'
 
+# Initialize logger
 log = utils.get_logger()
 
+# Function to create configuration file for video generation
 def create_react_config_file(background_video_frame_count, sentences, video_lengths, author, subreddit):
     config = {
         "backgroundVideoFrameCount": background_video_frame_count,
@@ -25,7 +28,7 @@ def create_react_config_file(background_video_frame_count, sentences, video_leng
     with open('current-config.json', 'w', encoding='UTF-8') as config_file:
         config_file.write(json_config)
 
-
+# Function to get post details from Reddit
 def get_post_details():
     try:
         post = ri.get_post()
@@ -41,7 +44,7 @@ def get_post_details():
         "link_to_post": f'https://www.reddit.com{post["permalink"]}'
     }
 
-
+# Function to generate TTS audio files for video
 def generate_tts_audio_files(tts_instance, title, body, subreddit):
     try:
         video_lengths, sentences = tts.generate_tts_for_sentences(tts_instance, title, body, subreddit)
@@ -52,7 +55,7 @@ def generate_tts_audio_files(tts_instance, title, body, subreddit):
         return
     return video_lengths, sentences
 
-
+# Function to generate background video frame count
 def generate_background_video_frame_count():
     try:
         utils.generate_background_video()
@@ -67,7 +70,7 @@ def generate_background_video_frame_count():
 
     return background_video_frame_count
 
-
+# Function to run video generation process
 def run_video_generation(args, generated_videos):
     tts_instance = TTS(model_name="tts_models/en/vctk/vits")
 
@@ -76,9 +79,11 @@ def run_video_generation(args, generated_videos):
         if not post_details:
             return
 
-        video_lengths, sentences = generate_tts_audio_files(tts_instance, post_details["title"], post_details["body"], post_details["subreddit"])
-        if not video_lengths or not sentences:
+        result = generate_tts_audio_files(tts_instance, post_details["title"], post_details["body"], post_details["subreddit"])
+        if result is None:
             continue
+
+        video_lengths, sentences = result
 
         background_video_frame_count = generate_background_video_frame_count()
         if not background_video_frame_count:
@@ -113,13 +118,12 @@ def run_video_generation(args, generated_videos):
 
         generated_videos += 1
 
-
+# Main function to execute video generation
 def main(args):
     log = utils.get_logger()
     generated_videos = 0
 
     run_video_generation(args, generated_videos)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='YAAAAAARRRRRRRR(s), Im a pirate!!')

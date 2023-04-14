@@ -76,33 +76,27 @@ def get_token():
         return token_data
 
 
+
 def generate_background_video():
     log = get_logger()
-    required_folders = [
-        './video-generation/public/video',
-        './background-videos',
-        './background-videos/archive'
-    ]
+    required_folders = ['./video-generation/public/video', './background-videos', './background-videos/archive']
     for folder in required_folders:
         check_for_folder_or_create(folder)
 
-    source_vids = [
-        f'./background-videos/{f}' for f in os.listdir('./background-videos')
-        if os.path.isfile(f'./background-videos/{f}')
-    ]
+    source_vids = [f'./background-videos/{f}' for f in os.listdir('./background-videos')\
+        if os.path.isfile(f'./background-videos/{f}')]
 
     vid_path = './video-generation/public/video/backgroundVideo.mp4'
     if os.path.isfile(vid_path):
         os.remove(vid_path)
 
+    # Select a random input video and start time
     input_file = source_vids[randrange(len(source_vids))]
     duration = ffmpeg.probe(input_file)['format']['duration']
     start_time = randint(5, int(float(duration)) - 70)
-    log.info(
-        'Using video %s to create random snippet starting at %s seconds',
-        input_file, start_time
-    )
+    log.info('Using video %s to create random snippet starting at %s seconds', input_file, start_time)
 
+    # Extract a 1-minute snippet starting from the randomly generated start time
     (
         ffmpeg
         .input(input_file, ss=start_time)
