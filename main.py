@@ -2,7 +2,6 @@ import subprocess
 import json
 import argparse
 import cv2
-# pylint: disable-next=import-error
 from TTS.api import TTS
 import reddit_integration as ri
 import utils
@@ -11,7 +10,9 @@ import tts
 BACKGROUND_VIDEO_PATH = './video-generation/public/video/backgroundVideo.mp4'
 OUTPUT_FILE_BUZZ_WORDS = 'reddit_story_crazy_reading_reddit_short_funny_sad_insane'
 
-def create_react_config(background_video_frame_count, sentences, video_lengths, author, subreddit):
+log = utils.get_logger()
+
+def create_react_config_file(background_video_frame_count, sentences, video_lengths, author, subreddit):
     config = {
         "backgroundVideoFrameCount": background_video_frame_count,
         "sentences": sentences,
@@ -24,67 +25,80 @@ def create_react_config(background_video_frame_count, sentences, video_lengths, 
     with open('current-config.json', 'w', encoding='UTF-8') as config_file:
         config_file.write(json_config)
 
-def main(args):
-    log = utils.get_logger()
-    generated_videos = 0
 
-    # Create a tts instance early to avoid re-creation on each loop
+def get_post_details():
+    try:
+        post = ri.get_post()
+    except ImportError as error:
+        log.warning(error)
+        return
+    return {
+        "title": post['title'],
+        "body": post['selftext'],
+        "author": post['author'],
+        "subreddit": post['subreddit'],
+        "post_id": post['name'],
+        "link_to_post": f'https://www.reddit.com{post["permalink"]}'
+    }
+
+
+def generate_tts_audio_files(tts_instance, title, body, subreddit):
+    try:
+        video_lengths, sentences = tts.generate_tts_for_sentences(tts_instance, title, body, subreddit)
+        print(sentences)
+    except AttributeError as error:
+        log.warning('Failed to generate TTS: %s', error)
+        utils.remove_tts_audio_files()
+        return
+    return video_lengths, sentences
+
+
+def generate_background_video_frame_count():
+    try:
+        utils.generate_background_video()
+    except Exception as error:
+        log.warning('Failed to generate Background video: %s', error)
+        utils.remove_tts_audio_files()
+        return
+
+    cap = cv2.VideoCapture(BACKGROUND_VIDEO_PATH)
+    background_video_frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    cap.release()
+
+    return background_video_frame_count
+
+
+def run_video_generation(args, generated_videos):
     tts_instance = TTS(model_name="tts_models/en/vctk/vits")
 
-    while generated_videos < args.number_of_videos :
-        # Get a reddit post
-        try:
-            post = ri.get_post()
-        except ImportError as error:
-            log.warning(error)
+    while generated_videos < args.number_of_videos:
+        post_details = get_post_details()
+        if not post_details:
             return
-        title = post['title']
-        body = post['selftext']
-        author = post['author']
-        subreddit = post['subreddit']
-        post_id = post['name']
-        link_to_post = f'https://www.reddit.com{post["permalink"]}'
 
-        # Generate TTS audio files and return list of each files length in seconds
-        # and list of sentences.
-        try:
-            [ video_lengths, sentences ] = tts.generate_tts_for_sentences(tts_instance, title, body, subreddit)
-            print(sentences)
-        except AttributeError as error:
-            log.warning('Failed to generate TTS: %s', error)
-            utils.remove_tts_audio_files()
+        video_lengths, sentences = generate_tts_audio_files(tts_instance, post_details["title"], post_details["body"], post_details["subreddit"])
+        if not video_lengths or not sentences:
             continue
 
-        try:
-            utils.generate_background_video()
-        except Exception as error:
-            log.warning('Failed to generate Background video: %s', error)
-            utils.remove_tts_audio_files()
+        background_video_frame_count = generate_background_video_frame_count()
+        if not background_video_frame_count:
             return
 
-        # Calculate total frame count of background video
-        # pylint: disable-next=no-member
-        cap = cv2.VideoCapture(BACKGROUND_VIDEO_PATH)
-        # pylint: disable-next=no-member
-        background_video_frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        cap.release()
-
-        # Build config file for React to use when rendering
-        create_react_config(background_video_frame_count, sentences, video_lengths, author, subreddit)
+        create_react_config_file(background_video_frame_count, sentences, video_lengths, post_details["author"], post_details["subreddit"])
 
         # Verify output folder exists
-        folder_name = f'{subreddit}_{post_id}'
+        folder_name = f'{post_details["subreddit"]}_{post_details["post_id"]}'
         utils.check_for_folder_or_create(f'./out/{folder_name}')
 
         # Write description file
-        with open(f'./out/{folder_name}/{post_id}_desc.txt', 'w', encoding='UTF-8') as description_file:
+        with open(f'./out/{folder_name}/{post_details["post_id"]}_desc.txt', 'w', encoding='UTF-8') as description_file:
             log.info('Writing description file...')
-            description_file.write(utils.get_video_description_string(author, subreddit, link_to_post))
+            description_file.write(utils.get_video_description_string(post_details["author"], post_details["subreddit"], post_details["link_to_post"]))
 
         # Generate the complete video
         log.info('Running Remotion render')
         generate_video_command = f'cd video-generation; npx remotion render RedditStory\
-            ../out/{subreddit}_{post_id}/{subreddit}_{OUTPUT_FILE_BUZZ_WORDS}.mp4 --props=../current-config.json'
+            ../out/{post_details["subreddit"]}_{post_details["post_id"]}/{post_details["subreddit"]}_{OUTPUT_FILE_BUZZ_WORDS}.mp4 --props=../current-config.json'
         preview_video_command = 'cd video-generation; npx remotion preview RedditStory --props=../current-config.json'
 
         if not args.preview:
@@ -97,20 +111,27 @@ def main(args):
         utils.remove_file(BACKGROUND_VIDEO_PATH)
         utils.remove_tts_audio_files()
 
-        #It's deemed that a video has been generated
         generated_videos += 1
+
+
+def main(args):
+    log = utils.get_logger()
+    generated_videos = 0
+
+    run_video_generation(args, generated_videos)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='YAAAAAARRRRRRRR(s), Im a pirate!!')
 
-    # Add your arguments here
     parser.add_argument(
         '--number_of_videos',
         '-n',
-        required = False,
-        type = int,
-        default = 1,
-        help='Generates n videos')
+        required=False,
+        type=int,
+        default=1,
+        help='Generates n videos'
+    )
 
     parser.add_argument(
         '--preview',
