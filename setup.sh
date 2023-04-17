@@ -62,6 +62,13 @@ else
   echo "extracted-posts folder already exists. Skipping generation."
 fi
 
+if ! dir_exists "out"; then
+  mkdir out
+  echo "out directory created successfully."
+else
+  echo "out folder already exists. Skipping generation."
+fi
+
 if ! dir_exists "background-videos"; then
   mkdir background-videos
   echo "background-videos directory created successfully."

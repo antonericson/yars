@@ -8,7 +8,7 @@ import utils
 USED_POSTS_FILE = './used_posts.json'
 LOCAL_POSTS_DIRECTORY = './extracted-posts'
 
-def get_post(post_id=None):
+def get_post(allow_over_18=False, post_id=None):
     log = utils.get_logger()
     utils.check_for_folder_or_create(LOCAL_POSTS_DIRECTORY)
 
@@ -26,7 +26,7 @@ def get_post(post_id=None):
     # If not fetch more and store as json files
     local_post_files = os.listdir(LOCAL_POSTS_DIRECTORY)
     if not local_post_files:
-        fetch_new_posts()
+        fetch_new_posts(allow_over_18)
 
     local_post_files = os.listdir(LOCAL_POSTS_DIRECTORY)
     # Remove all used posts from local post folder
@@ -68,7 +68,7 @@ def get_used_post_objects():
         used_post_objects = json.load(used_posts_file)
     return used_post_objects
 
-def fetch_new_posts():
+def fetch_new_posts(allow_over_18=False):
     sub_reddits = ['r/todayilearned',
                    'r/TrueOffMyChest',
                    'r/Showerthoughts',
@@ -99,7 +99,7 @@ def fetch_new_posts():
             if 'is_video' in post_data:
                 if post_data['is_video']:
                     continue
-            if 'over_18' in post_data:
+            if 'over_18' in post_data and not allow_over_18:
                 if post_data['over_18']:
                     continue
 
