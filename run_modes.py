@@ -1,14 +1,14 @@
-import automatic_generation
+import automatic_mode
 import interactive_mode
 
 DEFAULT = {
     'name': 'Automatic (default)',
-    'callback': automatic_generation.default
+    'callback': automatic_mode.default
 }
 
 PREVIEW = {
     'name': 'Preview mode',
-    'callback': automatic_generation.preview
+    'callback': automatic_mode.preview
 }
 
 INTERACTIVE = {

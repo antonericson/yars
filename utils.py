@@ -151,13 +151,13 @@ def get_logger():
 
     #Create a logger object
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     log_file_name = time.strftime('log_%Y-%m-%d_%H-%M-%S.log')
 
     # Create a file handler that writes log messages to a file
     file_handler = logging.FileHandler(f'./logs/{log_file_name}')
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(logging.INFO)
 
     # Create a console handler that writes log messages to the console
     console_handler = logging.StreamHandler()
@@ -171,6 +171,9 @@ def get_logger():
     # Add the file and console handlers to the logger
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
+
+    # Set propagate to False to prevent log messages from being propagated to the root logger
+    logger.propagate = False
 
     _LOGGER = logger
     return logger
