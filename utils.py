@@ -111,15 +111,29 @@ def remove_file(file_path):
     os.remove(file_path)
 
 def get_video_description_string(author, subreddit, link):
-    return f'Follow for more amazing reddit stories!\n\nSubreddit: \
-        r/{subreddit}\nPost by: u/{author}\n\
-            Link to reddit post: {link}\n\n#shorts #stories #redditstories #beststories'
+    return 'Follow for more amazing reddit stories!\n\nSubreddit: ' \
+            f'r/{subreddit}\nPost by: u/{author}\n' \
+            f'Link to reddit post: {link}\n\n'\
+            '#shorts #stories #redditstories #beststories'
 
 def check_for_folder_or_create(full_path):
     log = get_logger()
     if not os.path.isdir(full_path):
         log.info('Creating folder %s', full_path)
         os.mkdir(full_path)
+
+def create_react_config(background_video_frame_count, sentences, video_lengths, author, subreddit):
+    config = {
+        "backgroundVideoFrameCount": background_video_frame_count,
+        "sentences": sentences,
+        "videoLengths": video_lengths,
+        "totalLength": sum(video_lengths),
+        "author": author,
+        "subreddit": subreddit
+    }
+    json_config = json.dumps(config)
+    with open('current-config.json', 'w', encoding='UTF-8') as config_file:
+        config_file.write(json_config)
 
 def get_logger():
     # pylint: disable-next=global-statement
@@ -137,13 +151,13 @@ def get_logger():
 
     #Create a logger object
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     log_file_name = time.strftime('log_%Y-%m-%d_%H-%M-%S.log')
 
     # Create a file handler that writes log messages to a file
     file_handler = logging.FileHandler(f'./logs/{log_file_name}')
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(logging.INFO)
 
     # Create a console handler that writes log messages to the console
     console_handler = logging.StreamHandler()
@@ -157,6 +171,9 @@ def get_logger():
     # Add the file and console handlers to the logger
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
+
+    # Set propagate to False to prevent log messages from being propagated to the root logger
+    logger.propagate = False
 
     _LOGGER = logger
     return logger
