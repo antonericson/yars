@@ -6,10 +6,13 @@ export const Attribution: React.FC<{
 
     return (
         <>
+            <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,300" rel="stylesheet" type="text/css" />
             <div
                 style={{
-                    fontFamily: 'SF Pro Text, Helvetica, Arial',
-                    fontSize: 40,
+                    fontFamily: 'Open Sans',
+                    fontStyle: 'bold',
+                    fontWeight: 600,
+                    fontSize: '3em',
                     color: 'white',
                     textAlign: 'left',
                     position: 'absolute',
