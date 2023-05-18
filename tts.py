@@ -24,6 +24,7 @@ def add_full_stop(text):
 def get_sentences_from_story(title, text):
     preferred_len = 120
     max_len = 250
+    text = remove_edits(text)
     title = add_full_stop(title.strip())
     text = add_full_stop(text.strip())
 
@@ -76,6 +77,16 @@ def get_sentences_from_story(title, text):
                 break
 
     return [x.strip() for x in paragraphs]
+
+def remove_edits(text):
+    has_edits = 'edit: ' in text or 'EDIT: ' in text or 'Edit: ' in text
+    while has_edits:
+        text = text.split('edit: ')[0]
+        text = text.split('Edit: ')[0]
+        text = text.split('EDIT: ')[0]
+        has_edits = 'edit: ' in text or 'EDIT: ' in text or 'Edit: ' in text
+
+    return text
 
 def generate_tts_for_sentences(tts, title, body, subreddit):
 
