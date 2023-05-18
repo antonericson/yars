@@ -1,13 +1,13 @@
 import automatic_mode
 import interactive_mode
 
-DEFAULT = {
-    'name': 'Automatic (default)',
+LEGACY = {
+    'name': 'Legacy mode (automatic)',
     'callback': automatic_mode.default
 }
 
 PREVIEW = {
-    'name': 'Preview mode',
+    'name': 'Front End dev mode',
     'callback': automatic_mode.preview
 }
 
@@ -16,4 +16,4 @@ INTERACTIVE = {
     'callback': interactive_mode.run
 }
 
-ALL_OPTIONS = [DEFAULT, PREVIEW, INTERACTIVE]
+ALL_OPTIONS = [INTERACTIVE, PREVIEW, LEGACY]

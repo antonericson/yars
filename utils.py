@@ -108,7 +108,8 @@ def remove_tts_audio_files():
             log.error('Failed to delete %s. Reason: %s', file_path, error)
 
 def remove_file(file_path):
-    os.remove(file_path)
+    if os.path.isfile(file_path):
+        os.remove(file_path)
 
 def get_video_description_string(author, subreddit, link):
     return 'Follow for more amazing reddit stories!\n\nSubreddit: ' \
