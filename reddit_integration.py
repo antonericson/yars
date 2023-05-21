@@ -45,11 +45,6 @@ def get_post(allow_over_18=False, post_id=None, subreddits=None, timeframe=MONTH
 
     # Load used posts list from file
     used_post_objects = get_used_post_objects()
-    # Check if any local posts are availible
-    # If not fetch more and store as json files
-    local_post_files = os.listdir(LOCAL_POSTS_DIRECTORY)
-    if not local_post_files:
-        fetch_new_posts(timeframe, allow_over_18, subreddits=subreddits)
 
     local_post_files = os.listdir(LOCAL_POSTS_DIRECTORY)
     # Remove all used posts from local post folder
@@ -57,6 +52,12 @@ def get_post(allow_over_18=False, post_id=None, subreddits=None, timeframe=MONTH
         if has_post_been_used(used_post_objects, local_post_id):
             log.info('%s has already been used, deleting', local_post_id)
             utils.remove_file(f'{LOCAL_POSTS_DIRECTORY}/{local_post_id}.json')
+
+    # Check if any local posts are availible
+    # If not fetch more and store as json files
+    local_post_files = os.listdir(LOCAL_POSTS_DIRECTORY)
+    if not local_post_files:
+        fetch_new_posts(allow_over_18)
 
     # Get updated list of local posts
     local_post_files = os.listdir(LOCAL_POSTS_DIRECTORY)
