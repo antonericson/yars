@@ -7,8 +7,24 @@ import utils
 
 USED_POSTS_FILE = './used_posts.json'
 LOCAL_POSTS_DIRECTORY = './extracted-posts'
+ALL_SUBREDDITS = ['r/todayilearned',
+                   'r/TrueOffMyChest',
+                   'r/Showerthoughts',
+                   'r/unpopularopinion',
+                   'r/LifeProTips',
+                   'r/AmItheAsshole',
+                   'r/UnethicalLifeProTips',
+                   'r/ScienceFacts']
+DO_NOT_FILTER_URL_LIST = ['r/ScienceFacts',
+                            'r/todayilearned']
+DAY_TIMEFRAME = 'day'
+WEEK_TIMEFRAME = 'week'
+MONTH_TIMEFRAME = 'month'
+YEAR_TIMEFRAME = 'year'
+ALL_TIMEFRAME = 'all'
+POSSIBLE_TIMEFRAMES = [DAY_TIMEFRAME, WEEK_TIMEFRAME, MONTH_TIMEFRAME, YEAR_TIMEFRAME, ALL_TIMEFRAME]
 
-def get_post(allow_over_18=False, post_id=None):
+def get_post(allow_over_18=False, post_id=None, subreddits=None, timeframe=MONTH_TIMEFRAME):
     log = utils.get_logger()
     utils.check_for_folder_or_create(LOCAL_POSTS_DIRECTORY)
 
@@ -19,6 +35,13 @@ def get_post(allow_over_18=False, post_id=None):
         with open(file_name, encoding='UTF-8') as json_file:
             specific_post = json.load(json_file)
         return specific_post
+
+    if allow_over_18 or subreddits or timeframe:
+        # Remove all stored posts due to specific settings
+        local_post_files = os.listdir(LOCAL_POSTS_DIRECTORY)
+        log.info('Removing all stored posts due to changed setting')
+        for local_post_id in [post.split('.')[0] for post in local_post_files]:
+            utils.remove_file(f'{LOCAL_POSTS_DIRECTORY}/{local_post_id}.json')
 
     # Load used posts list from file
     used_post_objects = get_used_post_objects()
@@ -69,17 +92,8 @@ def get_used_post_objects():
         used_post_objects = json.load(used_posts_file)
     return used_post_objects
 
-def fetch_new_posts(allow_over_18=False):
-    sub_reddits = ['r/todayilearned',
-                   'r/TrueOffMyChest',
-                   'r/Showerthoughts',
-                   'r/unpopularopinion',
-                   'r/LifeProTips',
-                   'r/AmItheAsshole',
-                   'r/UnethicalLifeProTips',
-                   'r/ScienceFacts']
-    do_not_filter_url_list = ['r/ScienceFacts',
-                              'r/todayilearned']
+def fetch_new_posts(timeframe, allow_over_18=False, subreddits=None):
+    sub_reddits = subreddits if subreddits else ALL_SUBREDDITS
     token = utils.get_token()
     # setup our header info, which gives reddit a brief description of our app
     headers = {'User-Agent': 'TextToSpeechVideos/0.0.1'}
@@ -87,7 +101,7 @@ def fetch_new_posts(allow_over_18=False):
     headers = {**headers, **{'Authorization': f"bearer {token['token']}"}}
 
     for sub in sub_reddits:
-        top_url = 'https://oauth.reddit.com/' + sub + '/top/?t=month'
+        top_url = f'https://oauth.reddit.com/{sub}/top/?t={timeframe}'
 
         res = requests.get(top_url, headers=headers, timeout=30)
         all_posts = res.json()['data']['children']
@@ -95,7 +109,7 @@ def fetch_new_posts(allow_over_18=False):
         for post in all_posts:
             post_data = post['data']
             if "url_overridden_by_dest" in post_data and\
-                (not post_data['subreddit_name_prefixed'] in do_not_filter_url_list):
+                (not post_data['subreddit_name_prefixed'] in DO_NOT_FILTER_URL_LIST):
                 continue
             if 'is_video' in post_data:
                 if post_data['is_video']:
