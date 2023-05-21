@@ -33,7 +33,6 @@ def get_post(allow_over_18=False, post_id=None):
     # Check if any local posts are availible
     # If not fetch more and store as json files
     local_post_files = os.listdir(LOCAL_POSTS_DIRECTORY)
-    print(local_post_files)
     if not local_post_files:
         fetch_new_posts(allow_over_18)
 
