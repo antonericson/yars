@@ -1,3 +1,4 @@
+import os
 from simple_term_menu import TerminalMenu
 import reddit_integration as ri
 import utils
@@ -49,6 +50,7 @@ def get_posts(videos_to_generate=None, subreddits=None, timeframe=None):
     return videos_to_generate
 
 def run(tts_instance):
+    log = utils.get_logger()
     # Choose settings
     selecting_subreddits = True
     selected_subreddits = []
@@ -76,6 +78,12 @@ def run(tts_instance):
                                  title='Fetch top posts from:',
                                  clear_screen=True)
     selected_timeframe_index = timeframe_menu.show()
+
+    # Remove all stored posts due to interactive mode
+    local_post_files = os.listdir(ri.LOCAL_POSTS_DIRECTORY)
+    log.info('Removing all stored posts due Interactive mode')
+    for local_post_id in [post.split('.')[0] for post in local_post_files]:
+        utils.remove_file(f'{ri.LOCAL_POSTS_DIRECTORY}/{local_post_id}.json')
 
     # Generate all posts
     media_creation.generate_videos(tts_instance,

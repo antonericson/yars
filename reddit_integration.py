@@ -36,13 +36,6 @@ def get_post(allow_over_18=False, post_id=None, subreddits=None, timeframe=MONTH
             specific_post = json.load(json_file)
         return specific_post
 
-    if allow_over_18 or subreddits or timeframe:
-        # Remove all stored posts due to specific settings
-        local_post_files = os.listdir(LOCAL_POSTS_DIRECTORY)
-        log.info('Removing all stored posts due to changed setting')
-        for local_post_id in [post.split('.')[0] for post in local_post_files]:
-            utils.remove_file(f'{LOCAL_POSTS_DIRECTORY}/{local_post_id}.json')
-
     # Load used posts list from file
     used_post_objects = get_used_post_objects()
 
@@ -57,7 +50,7 @@ def get_post(allow_over_18=False, post_id=None, subreddits=None, timeframe=MONTH
     # If not fetch more and store as json files
     local_post_files = os.listdir(LOCAL_POSTS_DIRECTORY)
     if not local_post_files:
-        fetch_new_posts(allow_over_18)
+        fetch_new_posts(timeframe=timeframe, allow_over_18=allow_over_18, subreddits=subreddits)
 
     # Get updated list of local posts
     local_post_files = os.listdir(LOCAL_POSTS_DIRECTORY)
