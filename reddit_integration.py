@@ -14,9 +14,12 @@ ALL_SUBREDDITS = ['r/todayilearned',
                    'r/LifeProTips',
                    'r/AmItheAsshole',
                    'r/UnethicalLifeProTips',
-                   'r/ScienceFacts']
+                   'r/ScienceFacts',
+                   'r/tifu']
 DO_NOT_FILTER_URL_LIST = ['r/ScienceFacts',
                             'r/todayilearned']
+READ_SUBREDDIT_NAME_FIRST = ['r/Showerthoughts', 'r/AmItheAsshole']
+
 DAY_TIMEFRAME = 'day'
 WEEK_TIMEFRAME = 'week'
 MONTH_TIMEFRAME = 'month'
