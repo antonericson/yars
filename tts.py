@@ -2,6 +2,7 @@ import contextlib
 import wave
 import csv
 import re
+from reddit_integration import READ_SUBREDDIT_NAME_FIRST
 
 PARENTHESIS = ['(', ')']
 END_MARKS = ['.', '!', '?']
@@ -92,7 +93,10 @@ def generate_tts_for_sentences(tts, title, body, subreddit):
 
     # Split text into sentences fo easier sync of text in video
     # If sentences are too long, split at commas/parenthesis/question mark etc.
-    sentences = [subreddit]
+    sentences = []
+    if subreddit in READ_SUBREDDIT_NAME_FIRST:
+        sentences.append(subreddit)
+
     title = replace_common_shortenings(title)
     body = replace_common_shortenings(body)
     sentences.extend(get_sentences_from_story(title, body))
