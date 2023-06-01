@@ -2,7 +2,9 @@ import contextlib
 import wave
 import csv
 import re
-from reddit_integration import READ_SUBREDDIT_NAME_FIRST
+# pylint: disable-next=import-error
+from TTS.api import TTS
+from reddit_integration import READ_SUBREDDIT_NAME_FIRST, SWEDISH_SUBREDDITS
 
 PARENTHESIS = ['(', ')']
 END_MARKS = ['.', '!', '?']
@@ -94,9 +96,17 @@ def generate_tts_for_sentences(tts, title, body, subreddit):
     # Split text into sentences fo easier sync of text in video
     # If sentences are too long, split at commas/parenthesis/question mark etc.
     sentences = []
-    if subreddit in READ_SUBREDDIT_NAME_FIRST:
+    if f'r/{subreddit}' in READ_SUBREDDIT_NAME_FIRST:
         sentences.append(subreddit)
 
+    if f'r/{subreddit}' in SWEDISH_SUBREDDITS:
+        swe_tts = TTS(model_name='tts_models/sv/cv/vits')
+        sentences.append('Svenska Problem')
+        return generate_swedish_tts(tts=swe_tts, title=title, body=body, sentences=sentences)
+
+    return generate_english_tts(tts, title, body, sentences)
+
+def generate_english_tts(tts, title, body, sentences):
     title = replace_common_shortenings(title)
     body = replace_common_shortenings(body)
     sentences.extend(get_sentences_from_story(title, body))
@@ -106,6 +116,29 @@ def generate_tts_for_sentences(tts, title, body, subreddit):
         path_for_react = f'audio/{i}.wav'
         full_path = f'./video-generation/public/{path_for_react}'
         tts.tts_to_file(text=sentence, speaker="p273", file_path=full_path)
+        with contextlib.closing(wave.open(full_path,'r')) as audio:
+            frames = audio.getnframes()
+            rate = audio.getframerate()
+            duration = frames / float(rate)
+            video_lengths.append(duration)
+
+    # Discard if combined audio length is over 58 seconds
+    # Max length of YouTube Short is 60 seconds
+    if sum(video_lengths) > 58 :
+        raise AttributeError('Provided story would become longer than 60 seconds')
+
+    return [ video_lengths, sentences ]
+
+def generate_swedish_tts(tts, title, body, sentences):
+    title = replace_common_shortenings(title)
+    body = replace_common_shortenings(body)
+    sentences.extend(get_sentences_from_story(title, body))
+
+    video_lengths = []
+    for i, sentence in enumerate(sentences):
+        path_for_react = f'audio/{i}.wav'
+        full_path = f'./video-generation/public/{path_for_react}'
+        tts.tts_to_file(text=sentence, file_path=full_path)
         with contextlib.closing(wave.open(full_path,'r')) as audio:
             frames = audio.getnframes()
             rate = audio.getframerate()

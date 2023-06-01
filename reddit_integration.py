@@ -7,7 +7,8 @@ import utils
 
 USED_POSTS_FILE = './used_posts.json'
 LOCAL_POSTS_DIRECTORY = './extracted-posts'
-ALL_SUBREDDITS = ['r/todayilearned',
+SWEDISH_SUBREDDITS = ['r/swedishproblems']
+ENGLISH_SUBREDDITS = ['r/todayilearned',
                    'r/TrueOffMyChest',
                    'r/Showerthoughts',
                    'r/unpopularopinion',
@@ -16,6 +17,7 @@ ALL_SUBREDDITS = ['r/todayilearned',
                    'r/UnethicalLifeProTips',
                    'r/ScienceFacts',
                    'r/tifu']
+ALL_SUBREDDITS = ENGLISH_SUBREDDITS + SWEDISH_SUBREDDITS
 DO_NOT_FILTER_URL_LIST = ['r/ScienceFacts',
                             'r/todayilearned']
 READ_SUBREDDIT_NAME_FIRST = ['r/Showerthoughts', 'r/AmItheAsshole']
