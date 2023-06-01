@@ -14,7 +14,8 @@ ALL_SUBREDDITS = ['r/todayilearned',
                    'r/LifeProTips',
                    'r/AmItheAsshole',
                    'r/UnethicalLifeProTips',
-                   'r/ScienceFacts']
+                   'r/ScienceFacts',
+                   'r/tifu']
 DO_NOT_FILTER_URL_LIST = ['r/ScienceFacts',
                             'r/todayilearned']
 DAY_TIMEFRAME = 'day'
